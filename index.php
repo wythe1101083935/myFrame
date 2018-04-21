@@ -1,4 +1,4 @@
 <?php
-$str = 'asdfas\\asdf\\asdfasd';
-echo strstr($str,'\\','/') .'.php';
+$name = 'asdf.dfsd';
+echo $name[0];
 //test desk

@@ -6,4 +6,4 @@ require __DIR__ . '/base.php';
 
 //执行应用
 
-Test::run();
+App::run()->send();
