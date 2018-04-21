@@ -114,4 +114,74 @@ class Request{
 		}
 		return self::$instance;
 	}
+
+	/*创建一个URL请求*/
+	public static function create($uri,$method = 'GET',$params=[],$cookie = [] ,$files = [],$server = [],$content = null){
+		$server['PATH_INFO'] = '';
+		$server['REQUEST_METHOD'] = strtoupper($method);
+		$info = parse_url($uri);
+		if(isset($info['host'])){
+			$server['SERVER_NAME'] = $info['hose'];
+			$server['HTTP_HOST'] = $info['host'];
+		}
+
+		if(isset($info['scheme'])){
+			if('https' == $info['scheme']){
+				$server['HTTPS'] = 'on';
+				$server['SERVER_PORT'] = 80;
+			}
+		}
+
+		if(isset($info['port'])){
+			$server['SERVER_PORT'] = $info['port'];
+			$server['HTTP_HOST'] = $server['HTTP_HOST'] . ':' . $info['port'];
+		}
+
+		if(isset($info['user'])){
+			$server['PHP_AUTH_USER'] = $info['user'];
+		}
+
+		if(isset($info['pass'])){
+			$server['PHP_AUTH_PW'] = $info['pass'];
+		}
+
+		if(!isset($info['path'])){
+			$info['path'] = '/';
+		}
+
+		$options = [];
+		$options[strtolower($method)] = $params;
+		$queryString = '';
+		if(isset($info['query'])){
+			parse_str(html_entity_decode($info['query'],$query));
+			if(!empty($params)){
+				$params = array_replace($query,$params);
+				$queryString = http_biuld_query($params,'','&');
+			} else {
+				$params = $query;
+				$queryString = $info['query'];
+			}
+		} elseif (!empty($params)){
+			$queryString = http_build_query($params,'','&');
+		}
+
+		if($queryString){
+			parse_str($queryString,$get);
+			$options['get'] = isset($options['get']) ? array_merge($get,$options['get']) : $get;
+		}
+
+		$server['REQUEST_URI'] = $info['path'] . ('' !== $queryString ? '?'.$queryString : '');
+		$server['QUERY_STRING'] = $queryString;
+		$options['cookie'] = $cookie;
+		$options['param'] = $params;
+		$options['file'] = $files;
+		$options['server'] = $server;
+		$options['url'] = $server['REQUEST_URI'];
+		$options['pathinfo'] = '/'== $info['path'] ? '/' : ltrim($info['path'],'/');
+		$options['method'] = $server['REQUESET_METHOD'];
+		$options['domain'] = isset($info['scheme']) ? $info['scheme'] . '://' . $server['HTTP_HOST'] : '';
+		$options['content'] = $content;
+		self::$instance = new static($options);
+		return self::$instance;
+	}
 }
