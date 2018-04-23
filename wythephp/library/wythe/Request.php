@@ -55,10 +55,41 @@ class Request{
 	}
 	/*URL地址*/
 	protected $url;
-
+    /**
+     * 设置或获取当前完整URL 包括QUERY_STRING
+     * @access public
+     * @param string|true $url URL地址 true 带域名获取
+     * @return string
+     */
+	public function url($url = null){
+		if(!is_null($url) && true !== $url){
+			$this->url = $url;
+		}elseif(!$this->url){
+			if(IS_CLI){
+                $this->url = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
+            } elseif (isset($_SERVER['HTTP_X_REWRITE_URL'])) {
+                $this->url = $_SERVER['HTTP_X_REWRITE_URL'];
+            } elseif (isset($_SERVER['REQUEST_URI'])) {
+                $this->url = $_SERVER['REQUEST_URI'];
+            } elseif (isset($_SERVER['ORIG_PATH_INFO'])) {
+                $this->url = $_SERVER['ORIG_PATH_INFO'] . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+            } else {
+                $this->url = '';
+            }
+		}
+		return true === $url ? $this->domain() . $this->url : $this->url;
+	}
 	/*基础url*/
 	protected $baseUrl;
-
+	public function baseUrl($url = null){
+		if(!is_null($url) && true !== $url){
+			$this->baseUrl = $url;
+		}elseif(!$this->baseUrl){
+			$str = $this->url();
+			$this->baseUrl = strpos($str,'?') ? strstr($str,'?',true) : $str;
+		}
+		return true===$url ? $this->domain() . $this->baseUrl : $this->baseUr;
+	}
 	/*保存server*/
 	protected $server;
 	public function server($name='',$default = null,$filter=''){
@@ -70,7 +101,4 @@ class Request{
 		}
 		return $this->input($this->server,false===$name ? false : strtoupper($name),$default,$filter);//过滤一遍？
 	}
-
-
-
 }
