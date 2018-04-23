@@ -25,7 +25,7 @@ class Config
 			$type :
 			'\\wythe\\config\\driver\\' . uswords($type);
 
-		return self::set((new $class())->parse($config),$name,$range)
+		return self::set((new $class())->parse($config),$name,$range);
 	}
 
 	/*设置配置参数*/
@@ -106,23 +106,13 @@ class Config
 	/*加载配置文件*/
 	public static function load($file,$name = '',$range = ''){
 		$range = $range ? : self::$range;
-
 		if(!isset(self::$config[$range])) self::$config[$range] = [];
 
 		if(is_file($file)){
 			$name = strtolower($name);
-			$type = pathinfo($file,PATHINFO_EXTENSION);
-
-			if('php' == $type){
-				return self::set(include $file,$name,$range);
-			}
-
-			if('yaml' == $type && function_exists('yaml_parse_file')){
-				return self::set(yaml_parse_file($file),$name,$range);
-			}
-			return self::parse($file,$type,$name,$range);
+			return self::set(include $file,$name,$range);
 		}
-		return self::$config[$range];
+
 	}
 
 
