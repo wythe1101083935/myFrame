@@ -58,12 +58,12 @@ class App{
 		/*4.请求--URL路由放在请求中*/
 			//获取请求信息
 			$request = Request::instance();
-			echo '<pre>';
-			var_dump($request->server());
-			echo '</pre>';
-
 		/*5.获取路由调度信息*/
-
+            $dispatch = self::$dispatch;
+            // 未设置调度信息则进行 URL 路由检测
+            if (empty($dispatch)) {
+                $dispatch = self::routeCheck($request, $config);
+            }            
 		/*5.执行应用*/
 
 		
@@ -134,7 +134,7 @@ class App{
 
 	/*URL路由检测*/
 	public static function routeCheck($request,array $config){
-		$path = $request->path();
+        $path = $request->attr('path');
 		$depr = $config['pathinfo_depr'];
 		$result = false;
 

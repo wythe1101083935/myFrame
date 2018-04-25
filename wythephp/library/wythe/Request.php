@@ -114,8 +114,8 @@ class Request{
         }
         return self::$instance;
     }    
-    /*设置属性*/
-    public1 function attr($name,$value=false){
+    /*设置属性，获取属性*/
+    public function attr($name,$value=false){
     	if(property_exists($this, $name)){
 	    	if(!is_null($value) && $value !== false){//设置值
 	    		if(is_array($this->$name)){
@@ -139,10 +139,10 @@ class Request{
 	    	}
     	}
     }	
-    public1 function __set($name,$value){
+    public function __set($name,$value){
     	$this->attr($name,$value)
     }
-    public1 function __get($name){
+    public function __get($name){
     	return $this->attr($name,false);
     }
     /*获取url*/
@@ -283,16 +283,16 @@ class Request{
         }
     }
     /*获取当前的请求类型*/
-    /*protected function getMethod(){
+    protected function getMethod(){
         if (isset($_POST[Config::get('var_method')])) {
             $this->method = strtoupper($_POST[Config::get('var_method')]);
-            $this->{$this->method}($_POST);
+            $this->attr($this->method);
         } elseif (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
             $this->method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
         } else {
-            $this->method = IS_CLI ? 'GET' : (isset($this->server['REQUEST_METHOD']) ? $this->server['REQUEST_METHOD'] : $_SERVER['REQUEST_METHOD']);
+            $this->method = IS_CLI ? 'GET' : $this->attr('server')['REQUEST_METHOD'];
         }    	
-    }*/
+    }
     protected function getIsGet(){
     	$this->isGet = $this->attr('method') == 'GET';
     }
@@ -356,92 +356,16 @@ class Request{
         }
     }
     /*获取put*/
-
-    /*获取input*/
-   	/*protected function getInput()
-    {
-        if (false === $name) {
-            // 获取原始数据
-            return $data;
-        }
-        $name = (string) $name;
-        if ('' != $name) {
-            // 解析name
-            if (strpos($name, '/')) {
-                list($name, $type) = explode('/', $name);
-            } else {
-                $type = 's';
-            }
-            // 按.拆分成多维数组进行判断
-            foreach (explode('.', $name) as $val) {
-                if (isset($data[$val])) {
-                    $data = $data[$val];
-                } else {
-                    // 无输入数据，返回默认值
-                    return $default;
-                }
-            }
-            if (is_object($data)) {
-                return $data;
-            }
-        }
-
-        // 解析过滤器
-        $filter = $this->getFilter($filter, $default);
-
-        if (is_array($data)) {
-            array_walk_recursive($data, [$this, 'filterValue'], $filter);
-            reset($data);
+    protected function getPut(){
+        $content = $this->input;
+        if (false !== strpos($this->attr('contentType'), 'application/json')) {
+            $this->put = (array) json_decode($content, true);
         } else {
-            $this->filterValue($data, $name, $filter);
-        }
-
-        if (isset($type) && $data !== $default) {
-            // 强制类型转换
-            $this->typeCast($data, $type);
-        }
-        return $data;
-    }*/
-
-    /**
-     * 设置或获取当前的过滤规则
-     * @param mixed $filter 过滤规则
-     * @return mixed
-     */
-    /*获取filter*/
-/*    protected function Filter($filter = null)
-    {
-        if (is_null($filter)) {
-            return $this->filter;
-        } else {
-            $this->filter = $filter;
-        }
+            parse_str($content, $this->put);
+        }        
     }
 
-    protected function getFilter($filter, $default)
-    {
-        if (is_null($filter)) {
-            $filter = [];
-        } else {
-            $filter = $filter ?: $this->filter;
-            if (is_string($filter) && false === strpos($filter, '/')) {
-                $filter = explode(',', $filter);
-            } else {
-                $filter = (array) $filter;
-            }
-        }
-
-        $filter[] = $default;
-        return $filter;
-    }*/
-
-    /**
-     * 递归过滤给定的值
-     * @param mixed     $value 键值
-     * @param mixed     $key 键名
-     * @param array     $filters 过滤方法+默认值
-     * @return mixed
-     */
+    /* 使用指定的filter 递归过滤给定的值*/
     private function filterValue(&$value, $key, $filters)
     {
         $default = array_pop($filters);
@@ -477,49 +401,13 @@ class Request{
      * @return void
      */
     /*获取filterExp*/
-    protected function Filterexp(&$value)
+    protected function filterExp(&$value)
     {
         // 过滤查询特殊字符
         if (is_string($value) && preg_match('/^(EXP|NEQ|GT|EGT|LT|ELT|OR|XOR|LIKE|NOTLIKE|NOT LIKE|NOT BETWEEN|NOTBETWEEN|BETWEEN|NOT EXISTS|NOTEXISTS|EXISTS|NOT NULL|NOTNULL|NULL|BETWEEN TIME|NOT BETWEEN TIME|NOTBETWEEN TIME|NOTIN|NOT IN|IN)$/i', $value)) {
             $value .= ' ';
         }
         // TODO 其他安全过滤
-    }
-
-    /**
-     * 强制类型转换
-     * @param string $data
-     * @param string $type
-     * @return mixed
-     */
-    private function typeCast(&$data, $type)
-    {
-        switch (strtolower($type)) {
-            // 数组
-            case 'a':
-                $data = (array) $data;
-                break;
-            // 数字
-            case 'd':
-                $data = (int) $data;
-                break;
-            // 浮点
-            case 'f':
-                $data = (float) $data;
-                break;
-            // 布尔
-            case 'b':
-                $data = (boolean) $data;
-                break;
-            // 字符串
-            case 's':
-            default:
-                if (is_scalar($data)) {
-                    $data = (string) $data;
-                } else {
-                    throw new \InvalidArgumentException('variable type error：' . gettype($data));
-                }
-        }
     }
 
     /**
@@ -531,7 +419,7 @@ class Request{
      * @return mixed
      */
     /*获取has*/
-    protected function Has($name, $type = 'param', $checkEmpty = false)
+    public function Has($name, $type = 'param', $checkEmpty = false)
     {
         if (empty($this->$type)) {
             $param = $this->$type();
@@ -624,15 +512,10 @@ class Request{
      * @return bool
      */
     /*获取isAjax*/
-    protected function Isjax($ajax = false)
-    {
-        $value  = $this->server('HTTP_X_REQUESTED_WITH', '', 'strtolower');
+    protected function getIsjax(){
+        $value = strtolower($this->attr('server')['HTTP_X_REQUESTED_WITH']);
         $result = ('xmlhttprequest' == $value) ? true : false;
-        if (true === $ajax) {
-            return $result;
-        } else {
-            return $this->param(Config::get('var_ajax')) ? true : $result;
-        }
+        $this->isAjax = $result;
     }
 
     /**
@@ -642,14 +525,10 @@ class Request{
      * @return bool
      */
     /*获取isPjax*/
-    protected function Ispjax($pjax = false)
+    protected function getIsPjax()
     {
-        $result = !is_null($this->server('HTTP_X_PJAX')) ? true : false;
-        if (true === $pjax) {
-            return $result;
-        } else {
-            return $this->param(Config::get('var_pjax')) ? true : $result;
-        }
+        $result = !is_null($this->attr('server')['HTTP_X_PJAX']) ? true : false;
+        $this->isPjax =  $result;
     }
 
     /**
@@ -658,7 +537,7 @@ class Request{
      * @param boolean   $adv 是否进行高级模式获取（有可能被伪装）
      * @return mixed
      */
-    获取/*ip*/
+    /*获取ip*/
     protected function Ip($type = 0, $adv = true)
     {
         $type      = $type ? 1 : 0;
@@ -714,196 +593,44 @@ class Request{
         }
     }
 
-    /**
-     * 当前URL地址中的scheme参数
-     * @access public
-     * @return string
-     */
     /*获取scheme*/
-    protected function Scheme()
-    {
-        return $this->isSsl() ? 'https' : 'http';
+    protected function getScheme(){
+        $this->scheme = $this->attr('isSsl') ? 'https' ? 'http';
     }
 
-    /**
-     * 当前请求URL地址中的query参数
-     * @access public
-     * @return string
-     */
     /*获取query*/
-    protected function Query()
-    {
-        return $this->server('QUERY_STRING');
+    protected function getQuery(){
+        $this->query =  $this->attr('server')['QUERY_STRING'];
     }
 
-    /**
-     * 当前请求的host
-     * @access public
-     * @return string
-     */
     /*获取host*/
-    protected function Host()
-    {
-        if (isset($_SERVER['HTTP_X_REAL_HOST'])) {
-            return $_SERVER['HTTP_X_REAL_HOST'];
-        }
-        return $this->server('HTTP_HOST');
+    protected function getHost(){
+        $this->host = $this->attr('server')['HTTP_X_REAL_HOST']
     }
 
-    /**
-     * 当前请求URL地址中的port参数
-     * @access public
-     * @return integer
-     */
     /*获取port*/
-    protected function Port()
+    protected function getPort()
     {
-        return $this->server('SERVER_PORT');
+        $this->port = $this->attr('server')['SERVER_PORT'];
     }
 
-    /**
-     * 当前请求 HTTP_CONTENT_TYPE
-     * @access public
-     * @return string
-     */
     /*获取contentType*/
-    protected function Contenttype()
-    {
-        $contentType = $this->server('CONTENT_TYPE');
+    protected function getContentType(){
+        $contentType = $this->attr('server')['CONTENT_TYPE'];
         if ($contentType) {
             if (strpos($contentType, ';')) {
                 list($type) = explode(';', $contentType);
             } else {
                 $type = $contentType;
             }
-            return trim($type);
-        }
-        return '';
-    }
-
-    /**
-     * 获取当前请求的路由信息
-     * @access public
-     * @param array $route 路由名称
-     * @return array
-     */
-    /*获取routeInfo*/
-    protected function Routeinfo($route = [])
-    {
-        if (!empty($route)) {
-            $this->routeInfo = $route;
-        } else {
-            return $this->routeInfo;
+            $this->ContentType  = trim($type);
+        }else{
+            $this->ContentType  = '';
         }
     }
-
-    /**
-     * 设置或者获取当前请求的调度信息
-     * @access public
-     * @param array  $dispatch 调度信息
-     * @return array
-     */
-    /*获取dispatch*/
-    protected function Dispatch($dispatch = null)
-    {
-        if (!is_null($dispatch)) {
-            $this->dispatch = $dispatch;
-        }
-        return $this->dispatch;
-    }
-
-    /**
-     * 设置或者获取当前的模块名
-     * @access public
-     * @param string $module 模块名
-     * @return string|Request
-     */
-    /*获取module*/
-    protected function Module($module = null)
-    {
-        if (!is_null($module)) {
-            $this->module = $module;
-            return $this;
-        } else {
-            return $this->module ?: '';
-        }
-    }
-
-    /**
-     * 设置或者获取当前的控制器名
-     * @access public
-     * @param string $controller 控制器名
-     * @return string|Request
-     */
-    /*获取controller*/
-    protected function Controller($controller = null)
-    {
-        if (!is_null($controller)) {
-            $this->controller = $controller;
-            return $this;
-        } else {
-            return $this->controller ?: '';
-        }
-    }
-
-    /**
-     * 设置或者获取当前的操作名
-     * @access public
-     * @param string $action 操作名
-     * @return string|Request
-     */
-    /*获取action*/
-    protected function Action($action = null)
-    {
-        if (!is_null($action) && !is_bool($action)) {
-            $this->action = $action;
-            return $this;
-        } else {
-            $name = $this->action ?: '';
-            return true === $action ? $name : strtolower($name);
-        }
-    }
-
-    /**
-     * 设置或者获取当前的语言
-     * @access public
-     * @param string $lang 语言名
-     * @return string|Request
-     */
-    /*获取langset*/
-    protected function Langset($lang = null)
-    {
-        if (!is_null($lang)) {
-            $this->langset = $lang;
-            return $this;
-        } else {
-            return $this->langset ?: '';
-        }
-    }
-
-    /**
-     * 设置或者获取当前请求的content
-     * @access public
-     * @return string
-     */
-    /*获取getContent*/
-    protected function Getcontent()
-    {
-        if (is_null($this->content)) {
-            $this->content = $this->input;
-        }
-        return $this->content;
-    }
-
-    /**
-     * 获取当前请求的php://input
-     * @access public
-     * @return string
-     */
-    /*获取getInput*/
-    protected function Getinput()
-    {
-        return $this->input;
+    /*获取coentent*/
+    protected function getContent(){
+        $this->content = $this->input;
     }
 
     /**
@@ -935,8 +662,7 @@ class Request{
      * @return void
      */
     /*获取cache*/
-    protected function Cache($key, $expire = null, $except = [], $tag = null)
-    {
+    public function Cache($key, $expire = null, $except = [], $tag = null){
         if (!is_array($except)) {
             $tag    = $except;
             $except = [];
@@ -999,19 +725,4 @@ class Request{
             }
         }
     }
-
-    /**
-     * 读取请求缓存设置
-     * @access public
-     * @return array
-     */
-    /*获取getCache*/
-    protected function Getcache()
-    {
-        return $this->cache;
-    }
-
-
-
-
 }
