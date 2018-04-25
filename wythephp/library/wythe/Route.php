@@ -111,6 +111,45 @@ class Route{
 		/*取出变量*/
 		$vars = self::parseVar($rule);
 
+		if(isset($name)){
+			$key = $group ? $group . ($rule ? '/' .$rule : '') : $rule;
+			$suffix = isset($option['ext']) ? $option['ext'] : null;
+			self::name($name,[$key,$vars,self::$domain,$suffix]);
+		}
+
+		if(isset($option['modular'])){
+			$route = $option['modular'] .'/' . $route;
+		}
+
+		if($group){
+			if('*' != $type){
+				$option['method'] = $type;
+			}
+			if(self::$domain){
+				self::$rules['domain'][self::$domain]['*'][$group]['rule'][]= ['rule'=>$rule,'route'=>$route,'var'=>$vars,'option'=>$option,'pattern'=>$pattern];
+			}else{
+				self::$rules['*'][$group]['rule'][] = ['rule'=>$rule,'route'=>$route,'var'=>$vars,'option'=>$option,'patter'=>$pattern]
+			}
+		}else{
+			if('*' != $type && isset(self::$rules['*'][$rule])){
+				unset(self::$rules['*'][$rule]);
+			}
+			if(self::$domain){
+				self::$rules['domain'][self::$domain][$type][$rule] = ['rule' => $rule, 'route' => $route, 'var' => $vars, 'option' => $option, 'pattern' => $pattern];
+			} else {
+				self::$rules[$type][$rule] = ['rule' => $rule, 'route' => $route, 'var' => $vars, 'option' => $option, 'pattern' => $pattern];
+			}
+		}
+		if('*' == $type){
+			foreach (['get','post','put','delete','patch','head','options'] as $method) {
+				if(self::$doamin && !isset(self::$rules['domain'][self::$domain][$method][$rule])){
+					self::$rules['domain'][self::$domain][$method][$rule] = true;
+				}elseif(!self::$domain && !isset(self::$rules[$method][$rule])){
+					self::$rules[$method][$rule] = true;
+				}
+			}
+		}
+
 
 	}
     /**
@@ -154,5 +193,18 @@ class Route{
 			}
 		}
 		return $var;
+	}
+	public static function name($name= '',$value = null){
+		if(is_array($name)){
+			return self::$rules['name'] = $name;
+		}elseif('' === $name){
+			return self::$rules['name'];
+		}elseif(!is_null($value)){
+			self::$rules['name'][strtolower($name)][] = $value;
+		}else{
+			$name = strtolower($name);
+			return isset(self::$rules['name'][$name]) ? self::$rules['name'][$name] : null;
+		}
+
 	}
 }
