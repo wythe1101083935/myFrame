@@ -480,4 +480,56 @@ class Route{
 		return false;
 	}
 
+	private static function getRouteExpress($key){
+		return self::$domainRule ? self::$doaminRule[*][$key] : self::$rules[*][$key];
+	}
+
+/*路由所需第一步，
+设置出所有形式的路由
+*/
+
+
 }
+/*测试路由规则*/
+return [
+    '__pattern__' => [
+        'name' => '\w+',
+    ],
+    '[hello]'     => [
+        ':id'   => ['index/hello', ['method' => 'get'], ['id' => '\d+']],
+        ':name' => ['index/hello', ['method' => 'post']],
+    ],
+    'hello1/:id' => ['index/index',['before_behavior'=>'\app\index\behavior\UserCheck'],['id'=>'\d+']],
+    '__domain__'=>[
+        'blog'      => 'blog',
+        // 泛域名规则建议在最后定义
+        '*.user'    =>  'user',
+        '*'         => 'book',
+    ],
+     // 定义资源路由
+    '__rest__'=>[
+        // 指向index模块的blog控制器
+        'blog'=>'index/blog',
+    ],
+    // 定义普通路由
+    'hello/:id'=>'index/hello',
+    '/' => 'index', // 首页访问路由
+	'my'        =>  'Member/myinfo', // 静态地址路由
+	'blog/:id'  =>  'Blog/read', // 静态地址和动态地址结合
+	'new/:year/:month/:day'=>'News/read', // 静态地址和动态地址结合
+	':user/:blog_id'=>'Blog/read',// 全动态地址
+	'blog/:id'=>'http://blog.thinkphp.cn/read/:id',//重定向地址
+	//路由别名，只是缩短了url
+	'__alias__' =>  [
+        'user'  =>  ['index/user',['ext'=>'html']],
+    ],
+     '__miss__'  => 'public/miss',//没有匹配到的路由定向
+     //分组路由miss定向
+    '[blog]' =>  [
+        'edit/:id'  => ['Blog/edit',['method' => 'get'], ['id' => '\d+']],
+        ':id'       => ['Blog/read',['method' => 'get'], ['id' => '\d+']],
+        '__miss__'  => 'blog/miss',
+    ],
+    'new/:id'   => 'News/read',
+    '__miss__'  => 'public/miss',
+];
