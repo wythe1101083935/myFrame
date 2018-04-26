@@ -115,5 +115,48 @@ class Config
 
 	}
 
+	/*加载配置文件,框架自动调用*/
+	public static function loadConfig($module = ''){
+		/*定位模块目录,当module为空时加载的是应用配置文件，当module为具体模块，加载模块配置文件*/
+		$module = $module ? $module . DS : '';
+
+		//加载初始化文件
+		if(is_file(APP_PATH . $module . 'init' .EXT)){
+			include APP_PATH . $module . 'init' . EXT;
+		} elseif (is_file(RUNTIME_PATH . $module . 'init' . EXT)){
+			include RUNTIME_PATH. $module . 'init' . EXT; //直接加载缓存的配置文件
+		} else {
+			/*加载模块配置*/
+			$config = Config::load(CONF_PATH . $module . 'config' . CONF_EXT);
+
+			/*读取数据库配置文件*/
+			$filename = CONF_PATH . $module . 'config' . CONF_EXT;
+			Config::load($filename,'databse');
+
+			/*读取扩展配置文件*/
+			if(is_dir(CONF_PATH . $module . 'extra')){
+				$dir = CONF_PATH . $module . 'extra';
+				$files = scandir($dir);
+				foreach ($files as $file) {
+					if('.' . pathinfo($file,PATHINFO_EXTENSION) == CONF_EXT){
+						$filename = $dir . DS . $file;
+						Config::load($filename,pathinfo($file,PATHINFO_FILENAME));
+					}
+				}
+			}
+            // 加载应用状态配置
+            if ($config['app_status']) {
+                Config::load(CONF_PATH . $module . $config['app_status'] . CONF_EXT);
+            }
+
+            // 加载公共文件
+            $path = APP_PATH . $module;
+            if (is_file($path . 'common' . EXT)) {
+                include $path . 'common' . EXT;
+            }
+		}
+		return Config::get();
+	}
+
 
 }
