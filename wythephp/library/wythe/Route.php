@@ -284,6 +284,70 @@ class Route(){
         return self::$domainRule ? self::$domainRule['*'][$key] : self::$rules['*'][$key];
     }
 
+    private static function match($url,$rule,$pattern){
+        $m2 = explode('/',$rule);
+        $m1 = explode('|',$url);
+
+        var = [];
+        foreach ($m2 as $key => $val) {
+            if(false !== strpos($val,'<') && preg_match_all('/<(\w+(\??))>/',$val,$matches)){
+                $value = [];
+                $replace = [];
+                foreach ($matches[1] as $name) {
+                    if(strpos($name,'?')){
+                        $name = substr($name,0,-1);
+                        $replace[] = '(' .(isset($pattern[$name]) ? $pattern[$name] : '\w+') .')?';
+                    }else{
+                        $replace[] = '(' .(isset($pattern[$name]) ? $pattern[$name] : '\w+') .')';
+                    }
+                    $value[] = $name;
+                }
+
+                $val = str_replace($matches[0],$replace,$val);
+                if(preg_match('/^'.$val.'$/',isset($m1[$key]) ? $m1[$key] : '',$match)){
+                    array_shift($match);
+                    foreach ($value as $k => $name) {
+                        if(isset($match[$k])){
+                            $var[$name] = $match[$k];
+                        }
+                    }
+                    continue;
+                } else {
+                    return false;
+                }
+            }
+
+            if(0 === strpos($val,'[:')){
+                $val = substr($val,1,-1);
+                $optinal = true;
+            }else{
+                $optional = false;
+            }
+
+            if(0 == strpos($vall,':')){
+                $name = substr($val,1);
+                if(!$optional && !isset($m1[$key])){
+                    return false;
+                }
+
+                if(isset($m1[$key]) && isset($pattern[$name])){
+                    if($pattern[$name] instanceof \Closure){
+                        $result = call_user_func_array($pattern[$name],[$m1[$key]]);
+                        if(flase === $result){
+                            return false;
+                        }
+                    }elseif(!preg_match(0 === strpos($pattern[$name], '/') ? $pattern[$name] : '/^' . $pattern[$name] . '$/', $m1[$key])) {
+                        return false;
+                    }
+                }
+                $var[$name] = isset($m1[$key]) ? $m1[$key] : '';
+            }elseif(!isset($mq[$key]) || 0 !== strcasecmp($val,$m1[$key])){
+                return false;
+            }
+        }
+        return $var;
+    }
+
 
  
 
