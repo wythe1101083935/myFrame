@@ -285,13 +285,6 @@ class Route(){
     }
 
     private static function checkRule($name,$route,$pattern,$option,$depr){
-    	if(isset($pattern))
-    }
-	
-
-	private static match($url,$rule,$pattern){
-		$m2 = explode('/',$rule);
-		$m1 = explode('|',$url);
 
 		$var = [];
 
