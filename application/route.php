@@ -19,16 +19,14 @@ return array(
         'hello' => array(
             'rule' => array(
                 0 => array(
-                    'rule' => ':id',
                     'route' => 'index/hello',
-                    'var' => array('id' => 1,) ,
+                    'var' => array('id' => true,) ,
                     'option' => array('method' => 'get',) ,
-                    'pattern' => array('id' => '\\d+',) ,
+                    'pattern' => array('id' => '\d+',) ,
                 ) ,
                 1 => array(
-                    'rule' => ':name',
                     'route' => 'index/hello',
-                    'var' => array('name' => 1,) ,
+                    'var' => array('name' => false,) ,
                     'option' => array('method' => 'get',) ,
                     'pattern' => array() ,
                 ) ,
@@ -38,17 +36,16 @@ return array(
             'option' => array() ,
             'pattern' => array() ,
         ) ,
-        'hello1/:id' => array(
-            'rule' => 'hello1/:id',
+        'hello1' => array(
             'route' => 'index/index',
             'var' => array(
-                'id' => 1,
+                'id' => true,
             ) ,
             'option' => array(
                 'method' => 'get',
             ) ,
             'pattern' => array(
-                'id' => '\\d+',
+                'id' => '\d+',
             ) ,
         ) ,
     ) ,
