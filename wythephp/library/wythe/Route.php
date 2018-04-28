@@ -1,4 +1,5 @@
 <?php
+namespace wythe;
 /*
  +----------------------------------------------------------
  * 路由定义
@@ -9,19 +10,18 @@
  +----------------------------------------------------------
 */
  /*
-	路由的分类：
-	1.通用路由
-	2.域名路由
-	每一个下又作分类
-		1.模型、控制器、操作
-		2.重定向
-		3.到控制器的方法
-		4.到闭包函数
-		5.到到类的方法
-		6.路由别名
+    路由的分类：
+    1.通用路由
+    2.域名路由
+    每一个下又作分类
+        1.模型、控制器、操作
+        2.重定向
+        3.到控制器的方法
+        4.到闭包函数
+        5.到到类的方法
+        6.路由别名
  */
-namespace wythe;
-class Route(){
+class Route{
 	/*路由定义：优先级从上往下*/
 	private static $rules = [
 		'domain' => [ 
@@ -211,7 +211,7 @@ class Route(){
         if(isset(self::$rules['domain'][self::$domain][$request->host()])){
 			return self::checkRoute($request,$rules,$url,$depr,true);	
         }else{
-        	return self::checkRoute($request,$rules,$url,$depr,false)
+        	return self::checkRoute($request,$rules,$url,$depr,false);
         }
         
     }
@@ -267,11 +267,6 @@ class Route(){
 
     		}
     	}
-
-
-
-    	 	
-
     	/*4.优先级：4*/
     	/*5.优先级：5*/
     	/*6.优先级：6*/
@@ -284,70 +279,61 @@ class Route(){
         return self::$domainRule ? self::$domainRule['*'][$key] : self::$rules['*'][$key];
     }
 
-    private static function match($url,$rule,$pattern){
-        $m2 = explode('/',$rule);
-        $m1 = explode('|',$url);
+    public static function match($ruleVar,$urlVar,$options,$pattern)
+    {
 
-        var = [];
-        foreach ($m2 as $key => $val) {
-            if(false !== strpos($val,'<') && preg_match_all('/<(\w+(\??))>/',$val,$matches)){
-                $value = [];
-                $replace = [];
-                foreach ($matches[1] as $name) {
-                    if(strpos($name,'?')){
-                        $name = substr($name,0,-1);
-                        $replace[] = '(' .(isset($pattern[$name]) ? $pattern[$name] : '\w+') .')?';
-                    }else{
-                        $replace[] = '(' .(isset($pattern[$name]) ? $pattern[$name] : '\w+') .')';
-                    }
-                    $value[] = $name;
-                }
-
-                $val = str_replace($matches[0],$replace,$val);
-                if(preg_match('/^'.$val.'$/',isset($m1[$key]) ? $m1[$key] : '',$match)){
-                    array_shift($match);
-                    foreach ($value as $k => $name) {
-                        if(isset($match[$k])){
-                            $var[$name] = $match[$k];
-                        }
-                    }
-                    continue;
-                } else {
-                    return false;
-                }
-            }
-
+        $ruleVar = ['[:id]',':name'];
+        $urlVar = ['id'=>12,'name'=>'abc'];
+        $pattern = array(
+                    'name'=>'\w+',
+                    'id'=>'\d+'
+                );
+        /*判断是否是完全匹配*/
+        $matchAll = false;
+        /*规则格式化处理*/
+        $ruleVarNow = [];
+        foreach ($ruleVar as $key => $val) {
             if(0 === strpos($val,'[:')){
                 $val = substr($val,1,-1);
-                $optinal = true;
+                $val = substr($val,1)
             }else{
-                $optional = false;
+                $val = substr($val,1);
+                if(!isset($urlVar[$val])){
+                    return false;//没有传递此变量，必须要传递时，没有传递此变量，则必须加进去
+                }
             }
-
-            if(0 == strpos($vall,':')){
-                $name = substr($val,1);
-                if(!$optional && !isset($m1[$key])){
-                    return false;
-                }
-
-                if(isset($m1[$key]) && isset($pattern[$name])){
-                    if($pattern[$name] instanceof \Closure){
-                        $result = call_user_func_array($pattern[$name],[$m1[$key]]);
-                        if(flase === $result){
-                            return false;
-                        }
-                    }elseif(!preg_match(0 === strpos($pattern[$name], '/') ? $pattern[$name] : '/^' . $pattern[$name] . '$/', $m1[$key])) {
-                        return false;
-                    }
-                }
-                $var[$name] = isset($m1[$key]) ? $m1[$key] : '';
-            }elseif(!isset($mq[$key]) || 0 !== strcasecmp($val,$m1[$key])){
-                return false;
+            if(isset($pattern[$val])){
+                $ruleVarNow[$val] = $pattern[$val];
+            }else{
+                $ruleVarNow[$val] = null
             }
         }
-        return $var;
+        foreach ($options as $key => $value) {
+            /*验证options选项*/
+        }
+        /*url参数与规则对比*/
+        foreach ($urlVar as $key => $val) {
+            /*1.变量不在规则中 且变量需要全匹配*/
+            if(!isset($ruleVarNow[$key]) && $options['match_all']){
+                return false;//含有规则没有的变量 且是完全匹配
+            }
+            /*2.变量在规则中 且 变量存在正则验证*/
+            if(isset($ruleVarNow[$key]) && !is_null($ruleVarNow[$key])){
+                $pattern = $ruleVarNow[$key];
+                if ($pattern instanceof \Closure) {//如果是闭包函数检查
+                    $result = call_user_func_array($pattern, [$key]);
+                    if (false === $result) {
+                        return false;
+                    }
+                } elseif (!preg_match(0 === strpos($pattern, '/') ? $pattern : '/^' . $pattern . '$/', $val)) {
+                    return false;
+                }                
+            }     
+        }
+        /*3.若以上规则都通过,获取路由参数*/
+        return $urlVar;
     }
 
-
+}
  
 
