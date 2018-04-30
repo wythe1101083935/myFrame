@@ -29,8 +29,16 @@ $pattern = array(
 $rule ='hello/:name';
 $pattern = array('name'=>'\w+');*/
 
+$config = [
+    'rule_path' => __DIR__.'/application/route.php',//配置路径
+    'cache' => false, //缓存
+    'cache_path' => '',//缓存路径
+];
+$url = 'hello1/id/12';
 
-Route::match($url,$rule,$pattern);
+$domain = 'localhost';
+
+Route::startRoute($config,$url,$domain);
 
 
 

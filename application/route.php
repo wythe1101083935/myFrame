@@ -1,16 +1,6 @@
 <?php
-// +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
-// +----------------------------------------------------------------------
-// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: liu21st <liu21st@gmail.com>
-// +----------------------------------------------------------------------
-
 return array(
-    'options' => array(
+    'option' => array(
         'hello' => true,
         'hello1/:id' => true,
     ) ,
@@ -37,6 +27,7 @@ return array(
             'pattern' => array() ,
         ) ,
         'hello1' => array(
+            'rule'=>'hello1/:id',
             'route' => 'index/index',
             'var' => array(
                 'id' => true,
@@ -76,7 +67,7 @@ return array(
         ) ,
     ) ,
     'pattern' => array(
-        'name' => '\\w+',
+        'name' => '\w+',
     ) ,
     'name' => array(
         'index/hello' => array(
@@ -108,4 +99,4 @@ return array(
             ) ,
         ) ,
     ) ,
-) 
+);

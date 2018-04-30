@@ -2,6 +2,7 @@
 
 namespace wythe;
 class Route{
+    /*路由表*/
 	private static $rules = [
 		'domain' => [ 
 			'alias'=>[],//域名路由别名
@@ -18,46 +19,57 @@ class Route{
 		'option'=>[]
 	];
 
+    /*配置*/
     private static $config = [
-        'config_path' => '',//配置路径
+        'rule_path' => '',//配置路径
         'cache' => false, //缓存
         'cache_path' => '',//缓存路径
-    ]
+    ];
+
+    /*当前路由*/
+    public static $route = [
+        'type'=>'';
+    ];
 
 
     /*检测路由*/  
     private static function check($url,$domain = false){
-        $name = '';
-        $param = '';
-        $rules = self::$rules['domain'][$domain][$name] ? :
-                    (self::$rules['*'][$name] ? : null);
+        $url = rtrim($url,'/');
+        $name = strstr($url,'/',true);
+        $urlParam = explode('/',substr(strstr($url,'/'),1));
+        $urlVar = [];
+        for ($i=0; $i < count($urlParam); $i+=2) { 
+            $urlVar[$urlParam[$i]] = isset($urlParam[$i+1]) ? $urlParam[$i+1] : null;
+        }
+        if(isset(self::$rules['domain'][$domain][$name])){
+            $rules = self::$rules['domain'][$domain][$name];
+        }elseif(isset(self::$rules['*'][$name])){
+            $rules = self::$rules['*'][$name];
+        }else{
+            $rules = nulll;
+        }
     	/*检测路由*/
     	if(!is_null($rules)){
     		/*刷选当前使用的路由是哪一个*/      
             $rule = $rules['rule'];
-
-            $urlVar = explode('/',$param);
-
-            $options = array_merge($rules['option'],self::$options);
-            $pattern = array_merge($rules['pattern',self::$pattern]);
+            $options = array_merge($rules['option'],self::$rules['option']);
+            $pattern = array_merge($rules['pattern'],self::$rules['pattern']);
             if(is_array($rule)){
                 foreach ($rule as $key => $val) {
                     $ruleVar = $val['var'];
                     $options = array_merge($val['option'],$options);
                     $return = self::match($ruleVar,$urlVar,$options,$pattern);
                     if($return) 
-                        return array('route'=>$rule['route'],'param'=>$urlVar,'type'=>'');      
+                        return array('route'=>$rule['route'],'param'=>$urlVar,'type'=>'module');      
                 }
             }else{
                $ruleVar = $rules['var'];
                $return = self::match($ruleVar,$urlVar,$options,$pattern);
                if($return) 
-                 return array('route'=>$rules['name']['route'],'param'=>$urlVar,'type'=>'');
+                 return array('route'=>$rules['route'],'param'=>$urlVar,'type'=>'module');
             }
     	}
         /*没有检测到路由*/
-         
-
     }
 
     /*路由验证*/
@@ -75,7 +87,7 @@ class Route{
         /*参数验证*/
         foreach ($ruleVar as $key => $isRequired) {
             /*必填，而url没有*/
-            if($isRequired && !isset($url[$key])){
+            if($isRequired && !isset($urlVar[$key])){
                 return false;
             }
             /*变量有验证规则*/
@@ -96,29 +108,30 @@ class Route{
     /*设置路由参数*/
     private static function initRule($rule=false){
         if(false===$rule){
-            $rule = include self::$config['config_path'];
+            $rule = include self::$config['rule_path'];
+          //$rule = include 'C:\wamp\www\mylunzi\application\route.php';
         }
         /*测试用DEBUG*/
-        self::$rules = $rule;
+        return $rule;
         /*设置路由生成数组*/
 
         /*生成根据请求方式的快捷判断*/
     }
-
+    
     /*路由接口*/
-    public static function route($config,$url,$domain,$rule=false){
+    public static function routeStart($config,$url,$domain,$rule=false){
         /*1.加载配置文件*/
         self::$config = array_merge(self::$config,$config);
         /*2.加载路由*/
-        self::$config['cache'] ?
-        self::$rules = include self::$config['cache_path'] :
-        self::$rules = self::initRule($rule); 
+        if(self::$config['cache']){
+            self::$rules = include self::$config['cache_path'];
+        }else{
+            self::$rules = self::initRule($rule);
+        }
         /*3.检查路由*/
-        return self::check();
+        $return = self::check($url,$domain);
+        return $return;
     }
-
-
-
 }
  
 
