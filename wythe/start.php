@@ -30,10 +30,6 @@ define('IS_WIN',strpos(PHP_OS,'WIN') !== false);
 defined('WYTHE_PATH') or define('WYTHE_PATH',__DIR__ . DS);
 	//定义框架类库目录	
 	define('LIB_PATH',WYTHE_PATH . 'library' . DS);
-		//定义框架核心文件目录
-		define('CORE_PATH',LIB_PATH . 'wythe' . DS); 
-		// 定义traits目录
-		define('TRAIT_PATH',LIB_PATH . 'traits' .DS);
 
 //定义应用目录
 defined('APP_PATH') or define('APP_PATH',dirname($_SERVER['SCRIPT_FILENAME']));
@@ -76,7 +72,7 @@ if(is_file(ROOT_PATH . '.env')){//存在文件再加载
 }
 
 //自动加载类包含
-require CORE_PATH . 'Loader.php';
+require LIB_PATH . 'Loader.php';
 
 /*注册自动加载*/
 \wythe\Loader::register([
@@ -84,9 +80,7 @@ require CORE_PATH . 'Loader.php';
     'cache'=>false,
     'cache_path'=>RUNTIME_PATH . 'classmap' . EXT,
     'default_namespace'=>[
-        'wythe'    => LIB_PATH . 'wythe' . DS,
-        'behavior' => LIB_PATH . 'behavior' . DS,
-        'traits'   => LIB_PATH . 'traits' . DS,
+        'wythe'    => LIB_PATH,
     ],
     'depr'=>DS,
 ]);
@@ -100,7 +94,10 @@ require CORE_PATH . 'Loader.php';
 /*应用启动*/
 \wythe\App::run([
 	'config_path'=>CONF_PATH . 'config' .EXT,
-	'depr'=>'/'
+	'depr'=>'/',
+	'ext'=>EXT,
+	'module_config_path'=>APP_PATH,
+	'module_config_name'=>'config',
 ]);
 
 function dump($val){

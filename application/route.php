@@ -4,18 +4,18 @@ return array(
         'hello' => true,
         'hello1/:id' => true,
     ) ,
-    /*通用数组*/
+    /*通用路由*/
     '*' => array(
         'hello' => array(
             'rule' => array(
                 0 => array(
-                    'route' => 'index/hello',
+                    'route' => 'index/Index/hello',
                     'var' => array('id' => true,) ,
                     'option' => array('method' => 'get',) ,
                     'pattern' => array('id' => '\d+',) ,
                 ) ,
                 1 => array(
-                    'route' => 'index/hello',
+                    'route' => 'index/Index/hello',
                     'var' => array('name' => false,) ,
                     'option' => array('method' => 'get',) ,
                     'pattern' => array() ,
@@ -43,6 +43,7 @@ return array(
     'alias' => array(
         'user' => 'index/User',
     ) ,
+    /*域名特定路由，优先使用*/
     'domain' => array(
         'blog' => array(
             '[bind]' => array(
@@ -68,35 +69,5 @@ return array(
     ) ,
     'pattern' => array(
         'name' => '\w+',
-    ) ,
-    'name' => array(
-        'index/hello' => array(
-            0 => array(
-                0 => 'hello/:id',
-                1 => array(
-                    'id' => 1,
-                ) ,
-                2 => NULL,
-                3 => NULL,
-            ) ,
-            1 => array(
-                0 => 'hello/:name',
-                1 => array(
-                    'name' => 1,
-                ) ,
-                2 => NULL,
-                3 => NULL,
-            ) ,
-        ) ,
-        'index/index' => array(
-            0 => array(
-                0 => 'hello1/:id',
-                1 => array(
-                    'id' => 1,
-                ) ,
-                2 => NULL,
-                3 => NULL,
-            ) ,
-        ) ,
     ) ,
 );

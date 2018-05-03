@@ -10,11 +10,13 @@ class Request{
     protected $requestData = [
         'method'=>null,
         'domain'=>null,
+        'host'=>null,
+        'scheme'=>null,
         'url'=>null,
         'baseUrl'=>null,
         'baseFile'=>null,
         'root'=>null,
-        'pathinfo'=>null,
+        'pathInfo'=>null,
         'path'=>null,
         'ext'=>null,
         'port'=>null,
@@ -72,7 +74,9 @@ class Request{
         'isPjax'=>null,
     ];
     protected $config = [
-        'filter'=>''
+        'filter'=>'',
+        'var_pathinfo'=>'',
+        'https_agent_name'=>'',
     ];
     /**
      * 构造函数
@@ -122,7 +126,6 @@ class Request{
     	$this->attr($name,$value);
     }
     public function __get($name){
-        echo '__get__'.$name.'<br>';
     	return $this->attr($name,false);
     }
     /*获取server*/
@@ -165,7 +168,12 @@ class Request{
     }
     /*获取host*/
     protected function getHost(){
-        return $this->attr('server')['HTTP_X_REAL_HOST'];
+        if(isset($this->attr('server')['HTTP_X_REAL_HOST'])){
+            return $this->attr('server')['HTTP_X_REAL_HOST'];
+        }else{
+            return $this->attr('server')['HTTP_HOST'];
+        }
+        return ;
     }
     /*获取port*/
     protected function getPort(){
@@ -229,7 +237,7 @@ class Request{
     }
     /*获取domain*/
     protected function getDomain(){
-    	return  $this->attr('scheme') . '://' . $this->attr('scheme');
+    	return  $this->attr('scheme') . '://' . $this->attr('host');
     }
 
     /*获取pathinfo*/

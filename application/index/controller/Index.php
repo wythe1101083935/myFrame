@@ -7,4 +7,8 @@ class Index
     {
        return 'test';
     }
+
+    public function hello(){
+    	echo 'hello';
+    }
 }
