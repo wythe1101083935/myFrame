@@ -52,13 +52,13 @@ class Route{
     	if(!is_null($rules)){
     		/*刷选当前使用的路由是哪一个*/      
             $rule = $rules['rule'];
-            $options = array_merge($rules['option'],self::$rules['option']);
-            $pattern = array_merge($rules['pattern'],self::$rules['pattern']);
+            $options = self::$rules['option']+$rules['option'];
+            $pattern = self::$rules['pattern']+$rules['pattern'];
             /*分组路由*/
             if(is_array($rule)){
                 foreach ($rule as $key => $val) {
                     $ruleVar = $val['var'];
-                    $options = array_merge($val['option'],$options);
+                    $options = $options+$val['option'];
                     $return = self::match($ruleVar,$urlVar,$options,$pattern);
                     if($return) 
                         return array('route'=>$val['route'],'param'=>$urlVar,'type'=>'module');      
@@ -111,7 +111,7 @@ class Route{
     /*路由接口*/
     public static function routeStart($config,$pathInfo,$domain,$rule=false){
         /*1.加载配置文件*/
-        self::$config = array_merge(self::$config,$config);
+        self::$config = $config+self::$config;
         /*2.pathinfo模式*/
         if(!self::$config['route_on']){
             return array('route'=>$pathInfo,'type'=>'pathInfo');

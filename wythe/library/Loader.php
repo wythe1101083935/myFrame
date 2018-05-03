@@ -74,7 +74,7 @@ class Loader{
 	//注册自动加载
     public static function register($config)
     {
-        self::$config = array_merge(self::$config,$config);
+        self::$config = $config + self::$config;
 
         // 注册默认的命名空间
         self::addNamespace(self::$config['default_namespace']);
@@ -115,7 +115,7 @@ class Loader{
     /*增加类库映射*/
     /*public static function addClassMap($class, $map = ''){
         if (is_array($class)) {
-            self::$map = array_merge(self::$map, $class);
+            self::$map = $class + self::$map;
         } else {
             self::$map[$class] = $map;
         }

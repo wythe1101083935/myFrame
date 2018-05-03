@@ -33,10 +33,10 @@ class App{
 	/*应用程序入口*/
 	public static function run($config){
 		/*1.加载app类配置*/
-		self::$appConfig = array_merge(self::$appConfig,$config);
+		self::$appConfig = $config + self::$appConfig;
 
 		/*2.加载应用配置文件*/
-		self::$config = array_merge(self::$config,include self::$appConfig['config_path']);
+		self::$config = (include self::$appConfig['config_path']) + self::$config;
 
 		/*3.系统参数设置*/
 		date_default_timezone_set(self::$config['default_timezone']);//设置系统时区	
@@ -73,7 +73,7 @@ class App{
     	/*1.加载模块配置文件*/
     	$path = self::$appConfig['module_config_path'] . $module . self::$appConfig['depr'] . self::$appConfig['module_config_name'] . self::$appConfig['ext'];
     	if(is_file($path)){
-    		self::$config = array_merge(self::$config,include $path);
+    		self::$config = (include $path + self::$config);
     	}
     	/*2.执行*/
         $requestController = '\\'.self::$config['app_namespace'].'\\'.($module ? $module.'\\' : '').'controller' .'\\'.$controller;

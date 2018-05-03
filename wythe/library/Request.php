@@ -105,7 +105,7 @@ class Request{
     	if(!is_null($value) && $value !== false){//设置值
     		if(is_array($this->requestData[$name])){
     			if(is_array($value)){
-    				$this->requestData[$name] = array_merge($this->requestData[$name] ,$value);
+    				$this->requestData[$name] = $value + $this->requestData[$name];
     			}
     		}else{
     			$this->requestData[$name]  = $value;
@@ -355,7 +355,7 @@ class Request{
                 $vars = [];
         }
         // 当前请求参数和URL地址中的参数合并
-        return array_merge($this->attr('get'), $vars, $this->attr('route'));  	
+        return $this->attr('route')+$vars+$this->attr('get');  	
     }
     /*获取get*/
     protected function getGet(){
