@@ -52,13 +52,14 @@ class Route{
     	if(!is_null($rules)){
     		/*刷选当前使用的路由是哪一个*/      
             $rule = $rules['rule'];
-            $options = self::$rules['option']+$rules['option'];
-            $pattern = self::$rules['pattern']+$rules['pattern'];
+            $options = $rules['option']+self::$rules['option'];
+            $pattern = $rules['pattern']+self::$rules['pattern'];
             /*分组路由*/
             if(is_array($rule)){
                 foreach ($rule as $key => $val) {
                     $ruleVar = $val['var'];
-                    $options = $options+$val['option'];
+                    $options = $val['option']+$options;
+                    $pattern = $val['pattern'] + $pattern;
                     $return = self::match($ruleVar,$urlVar,$options,$pattern);
                     if($return) 
                         return array('route'=>$val['route'],'param'=>$urlVar,'type'=>'module');      
@@ -94,7 +95,8 @@ class Route{
                 return false;
             }
             /*变量有验证规则*/
-            if(isset($pattern[$key])){              
+            if(isset($pattern[$key])){ 
+
                 /*闭包验证*/
                 if ($pattern[$key] instanceof \Closure) {
                     $result = call_user_func_array($pattern[$key], [$key]);
