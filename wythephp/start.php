@@ -79,7 +79,17 @@ if(is_file(ROOT_PATH . '.env')){//存在文件再加载
 require CORE_PATH . 'Loader.php';
 
 /*注册自动加载*/
-\wythe\Loader::register();
+\wythe\Loader::register([
+	'is_win'=>IS_WIN,
+    'cache'=>false,
+    'cache_path'=>RUNTIME_PATH . 'classmap' . EXT,
+    'default_namespace'=>[
+        'wythe'    => LIB_PATH . 'wythe' . DS,
+        'behavior' => LIB_PATH . 'behavior' . DS,
+        'traits'   => LIB_PATH . 'traits' . DS,
+    ],
+    'depr'=>DS,
+]);
 
 /*注册错误和异常处理机制*/
 //\wythe\Error::register();
@@ -88,7 +98,10 @@ require CORE_PATH . 'Loader.php';
 //\wythe\Config::set(include WYTHE_PATH . 'convention' .Ext);
 
 /*应用启动*/
-App::run();
+\wythe\App::run([
+	'config_path'=>CONF_PATH . 'config' .EXT,
+	'depr'=>'/'
+]);
 
 function dump($val){
 	echo '<pre>';
