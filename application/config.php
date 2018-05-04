@@ -14,17 +14,22 @@ return [
     // | 应用设置
     // +----------------------------------------------------------------------
     // 应用调试模式
+    /*是否开启调试*/
     'app_debug'              => false,
     // 应用Trace
     'app_trace'              => false,
     // 应用模式状态
     'app_status'             => '',
     // 是否支持多模块
-    'app_multi_module'       => true,
+    'app_multi_module'       => true,       
+
     // 入口自动绑定模块
     'auto_bind_module'       => false,
     // 注册的根命名空间
-    'root_namespace'         => [],
+    'root_namespace'         => [
+        'tools'=>WYTHE_PATH . 'tools' . DS
+    ],
+    'app_namespace'=>'application',
     // 扩展函数文件
     'extra_file_list'        => [WYTHE_PATH . 'helper' . EXT],
     // 默认输出类型
@@ -73,9 +78,12 @@ return [
     // | URL设置
     // +----------------------------------------------------------------------
     'route'=>[
-        'rule_path'=>APP_PATH . 'route'.EXT,//路由配置文件
-        'cache'=>false, //是否缓存路由配置
-        'cache_path'=>'',//缓存路径
+        //路由配置文件
+        'rule_path'=>APP_PATH . 'route'.EXT,
+        //是否缓存路由配置
+        'cache'=>false, 
+        //缓存路径
+        'cache_path'=>'',
         /*是否开启路由*/
         'route_on'=>true,
         //是否强制使用路由
@@ -116,52 +124,7 @@ return [
         // 全局请求缓存排除规则
         'request_cache_except'   => [],
     ],
-    // PATHINFO变量名 用于兼容模式
- 
-
-    // +----------------------------------------------------------------------
-    // | 模板设置
-    // +----------------------------------------------------------------------
-
-    'template'               => [
-        // 模板引擎类型 支持 php think 支持扩展
-        'type'         => 'Think',
-        // 模板路径
-        'view_path'    => '',
-        // 模板后缀
-        'view_suffix'  => 'html',
-        // 模板文件名分隔符
-        'view_depr'    => DS,
-        // 模板引擎普通标签开始标记
-        'tpl_begin'    => '{',
-        // 模板引擎普通标签结束标记
-        'tpl_end'      => '}',
-        // 标签库标签开始标记
-        'taglib_begin' => '{',
-        // 标签库标签结束标记
-        'taglib_end'   => '}',
-    ],
-
-    // 视图输出字符串内容替换
-    'view_replace_str'       => [],
-    // 默认跳转页面对应的模板文件
-    'dispatch_success_tmpl'  => WYTHE_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
-    'dispatch_error_tmpl'    => WYTHE_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
-
-    // +----------------------------------------------------------------------
-    // | 异常及错误设置
-    // +----------------------------------------------------------------------
-
-    // 异常页面的模板文件
-    'exception_tmpl'         => WYTHE_PATH . 'tpl' . DS . 'think_exception.tpl',
-
-    // 错误显示信息,非调试模式有效
-    'error_message'          => '页面错误！请稍后再试～',
-    // 显示错误信息
-    'show_error_msg'         => false,
-    // 异常处理handle类 留空使用 \think\exception\Handle
-    'exception_handle'       => '',
-
+  
     // +----------------------------------------------------------------------
     // | 日志设置
     // +----------------------------------------------------------------------
@@ -232,12 +195,5 @@ return [
         'httponly'  => '',
         // 是否使用 setcookie
         'setcookie' => true,
-    ],
-
-    //分页配置
-    'paginate'               => [
-        'type'      => 'bootstrap',
-        'var_page'  => 'page',
-        'list_rows' => 15,
     ],
 ];
