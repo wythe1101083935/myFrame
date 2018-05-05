@@ -288,7 +288,7 @@ class Request{
         if (empty($accept)) {
         	$this->type = false;
         }
-        foreach ($this->mimeType as $key => $val) {
+        foreach ($this->attr('mimeType') as $key => $val) {
             $array = explode(',', $val);
             foreach ($array as $k => $v) {
                 if (stristr($accept, $v)) {
