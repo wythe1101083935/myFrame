@@ -1,5 +1,5 @@
 <?php
-namespace wythe;
+namespace wythe\system;
 
 class Request{
     /*object 对象实例*/

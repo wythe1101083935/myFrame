@@ -1,6 +1,6 @@
 <?php
 
-namespace wythe;
+namespace wythe\system;
 class Route{
     /*路由表*/
 	private static $rules = [
@@ -22,8 +22,6 @@ class Route{
     /*配置*/
     private static $config = [
         'rule_path' => '',//配置路径
-        'cache' => false, //缓存
-        'cache_path' => '',//缓存路径
     ];
 
     /*当前路由*/
@@ -120,11 +118,7 @@ class Route{
         }else{
         /*3.路由模式*/
             if($rule === false){
-                if(self::$config['cache']){
-                    self::$rules = include self::$config['cache_path'];
-                }else{
-                    self::$rules = include self::$config['rule_path'];
-                }
+                self::$rules = include self::$config['rule_path'];
             }else{
                 self::$rules = $rule;
             }

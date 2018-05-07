@@ -1,6 +1,6 @@
 <?php
 
-namespace wythe;
+namespace wythe\system;
 
 class Loader{
 
@@ -22,10 +22,8 @@ class Loader{
     //参数配置
     protected static $config = [
         'is_win'=>false,
-        'cache'=>false,
-        'cache_path'=>'',//缓存路径
-        'default_namespace'=>[],
         'depr'=>'/',//分隔符
+        'ext'=>'.php'
     ];
 	//自动加载函数
 	public static function autoload($class){
@@ -47,7 +45,7 @@ class Loader{
 			return self::$map[$class];
 		}
 		//2.从PSR-4空间里面找
-        $logicalPathPsr4 = strtr($class, '\\', self::$config['depr']) . EXT;
+        $logicalPathPsr4 = strtr($class, '\\', self::$config['depr']) . self::$config['ext'];
         $first           = $class[0];
         if (isset(self::$prefixLengthsPsr4[$first])) {
             foreach (self::$prefixLengthsPsr4[$first] as $prefix => $length) {
@@ -75,20 +73,8 @@ class Loader{
     public static function register($config)
     {
         self::$config = $config + self::$config;
-
-        // 注册默认的命名空间
-        self::addNamespace(self::$config['default_namespace']);
-
-        // 加载缓存类库映射文件
-        /*if (self::$config['cache'] && is_file($config['cache_path'])) {
-            self::addClassMap($config['cache_path']);
-        }*/
-
-        // 自动加载 extend 目录
-        //self::$fallbackDirsPsr4[] = rtrim(EXTEND_PATH, self::$config['depr']);
-
         // 系统函数自动加载
-        spl_autoload_register('wythe\\Loader::autoload', true, true);
+        spl_autoload_register('self::autoload', true, true);
     }
 
     /*增加空间定义*/
@@ -111,14 +97,4 @@ class Loader{
     		self::$prefixDirsPsr4[$prefix] = (array) $paths;
     	}
     }
-
-    /*增加类库映射*/
-    /*public static function addClassMap($class, $map = ''){
-        if (is_array($class)) {
-            self::$map = $class + self::$map;
-        } else {
-            self::$map[$class] = $map;
-        }
-    }*/
-
 }

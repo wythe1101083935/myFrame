@@ -11,6 +11,9 @@
  +----------------------------------------------------------
  */
 namespace wythe;
+use wythe\system\Loader;
+use wythe\system\Request;
+use wythe\system\Route;
 /*系统常量定义*/
 define('WYTHE_VERSION','1.0.0');
 /*定义文件全局配置*/
@@ -32,7 +35,7 @@ define('IS_WIN',strpos(PHP_OS,'WIN') !== false);
 //定义框架启动目录	
 defined('WYTHE_PATH') or define('WYTHE_PATH',__DIR__ . DS);
 	//定义框架类库目录	
-	define('LIB_PATH',WYTHE_PATH . 'library' . DS);
+	define('SYSTEM_PATH',WYTHE_PATH . 'system' . DS);
 
 //定义应用目录
 defined('APP_PATH') or define('APP_PATH',dirname($_SERVER['SCRIPT_FILENAME']));
@@ -60,27 +63,31 @@ class App{
 	];
 
 	/*配置文件路径*/
-	protected static $configPath = APP_PATH . 'config'. EXT;
+	protected static $configPath;
+
+	/*当前请求*/
+	protected static $request;
 
 	/*当前路由*/
 	protected static $dispatch;
 
 	/*应用入口*/
 	public static function run(){
-		require LIB_PATH . 'Loader.php';
-		/*注册自动加载*/
+		/*只有Loader需要手动加载*/
+		require SYSTEM_PATH . 'Loader.php';
+		/*注册自动加载，并注册框架根命名空间*/
 		Loader::register([
 			'is_win'=>IS_WIN,
-		    'cache'=>false,
-		    'cache_path'=>RUNTIME_PATH . 'classmap' . EXT,
-		    'default_namespace'=>[
-		        'wythe'    => LIB_PATH,
-		    ],
 		    'depr'=>DS,
+		    'ext'=>EXT,
 		]);
+		Loader::addNamespace('wythe',WYTHE_PATH);
 		/*执行应用*/
 		/*1.加载应用配置文件*/
+		self::$configPath = APP_PATH . 'config'. EXT;
 		self::$config = (include self::$configPath) + self::$config;
+		Loader::addNamespace(self::$config['root_namespace']);
+		Loader::addNamespace(self::$config['app_namespace'],APP_PATH);
 
 		/*2系统参数设置*/
 		date_default_timezone_set(self::$config['default_timezone']);//设置系统时区	
@@ -88,16 +95,14 @@ class App{
 		//$config['lang_switch_on'] && Lang::detect();//是否开启语言自动检测
 
 		/*3.获取请求信息*/
-		$request = Request::instance();
+		self::$request = Request::instance();
 
 		/*4.获取路由*/
-		self::$dispatch = Route::routeStart(self::$config['route'],$request->pathInfo,$request->domain);
+		self::$dispatch = Route::routeStart(self::$config['route'],self::$request->pathInfo,self::$request->domain);
 
 		/*5.根命名空间加载*/
-		foreach (self::$config['root_namespace'] as $key => $value) {
-			Loader::addNamespace($key,$value);
-		}
-		Loader::addNamespace(self::$config['app_namespace'],APP_PATH);
+
+
 
 		/*6.执行*/
 		$data = self::exec();	
