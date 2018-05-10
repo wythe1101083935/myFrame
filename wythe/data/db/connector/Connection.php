@@ -214,4 +214,143 @@ abstract class Connection{
 		}
 	}
 
+	/*执行查询*/
+	public function query($sql,$bind = [],$master = false ,$pdo = false){
+		$this->initConnect($master);
+
+		if(!$this->linkID){
+			return false;
+		}
+
+		/*记录sql语句*/
+		$this->queryStr　= $sql;
+		if($bind){
+			$this->bind = $bind;
+		}
+
+		Db::$queryTimes++;
+
+		try{
+			/*调试开始*/
+			$this->debug(true);
+
+			/*示范前次的查询结果*/
+			if(!empty($this->PDOStatement)){
+				$this->free();
+			}
+
+			/*预处理*/
+			if(empty($this->PDOStatement)){
+				$this->PDOStatement = $this->linkID->prepare($sql);
+			}
+
+			/*是否为存储过程调用*/
+			$procedure = in_array(strtolower(substr(trim($sql),0,4)),['call','exec']);
+
+			/*参数绑定*/
+			if($procedure){
+				$this->bindParam($bind);
+			} else {
+				$this->bindValue($bind);
+			}
+
+			/*执行查询*/
+			$this->PDOStatement->execute();
+			/*调试结束*/
+			$this->debug(false);
+			/*返回结果集*/
+			return $this->getResult($pdo,$proceedure);
+		} catch (\PDOException $e){
+			echo 'error';
+		}
+
+	}
+
+	/*执行增删改*/
+	public function execute($sql,$bind = []){
+		$this->initConnect(true);
+		if(!$this->linkID){
+			return false;
+		}
+
+		/*记录sql语句*/
+		$this->queryStr = $sql;
+		if($bind){
+			$this->bind = $bind;
+		}
+
+		Db::$executeTimes++;
+
+		try{
+			/*调试开始*/
+			$this->debug(true);
+
+			/*释放前次的查询结果*/
+			if(!emtpy($this->PDOStatement) && $this->PDOStatement->queryString != $sql){
+				$this->free();
+			}
+
+			/*预处理*/
+			if(empty($this->PDOStatement)){
+				$this->PDOStatement = $this->linkID->prepare($sql);
+			}
+
+			/*是否为存储过程调用*/
+			$procedure = in_array(strtolower(substr(trim($sql),0,4)),['call','exec']);
+
+			/*参数绑定*/
+			if($procedure){
+				$this->bindParam($bind);
+			}else{
+				$this->bindValue($bind);
+			}
+
+			/*执行语句*/
+			$this->PDOStatment->exeute();
+			/*调试结束*/
+			$this->debug(false);
+			$this->numRows = $this->PDOStatement->rowCount();
+			return $this->numRows;
+		} catch(\PDOException $e){
+			echo 'error'; 
+		}
+	}
+
+	/*根据参数绑定组装最终的sql语句便于调试*/
+	public function getRealSql($sql,array $bind=[]){
+		if(is_array($sql)){
+			$sql = implode(';',$sql);
+		}
+
+		foreach ($bind as $key => $val) {
+			$value = is_array($val) ? $val[0] : $val;
+			$type = is_array($val) ? $val[1] : PDO::PARAM_STR;
+
+			if(PDO::PARAM_STR == $type){
+				$value = $this->quote($value);
+			}elseif(PDO::PARAM_INT == $type){
+				$value = (float)$value;
+			}
+
+			/*判断占位符*/
+			$sql = is_numeric($key) ?
+				substr_replace($sql,$value,strpos($sql,'?'),1) :
+				str_replace([
+						':' . $key . ')',
+						':' . $key . ',',
+						':' . $key . ' ',
+						':' . $key . PHP_EOL
+					],
+					[
+						$value . ')',
+						$value . ',',
+						$value . PHP_EOL,
+						$value . ' ',
+					]
+				);
+
+		}
+		return rtrim($sql);
+	}
+
 }
