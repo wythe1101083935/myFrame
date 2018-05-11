@@ -56,17 +56,18 @@ class Mysql{
 	public function query($sql,$bind=[],$master=false){
 		/*记录sql语句*/
 		$this->queryStr = $sql;
-
-		/*绑定参数*/
-		if($bind) $this->bind = $bind;
-
-		/*判断是否主从*/
-
 		/*数据库连接*/
 		$this->initConnect($master);
 
-		/*执行*/
+		/*预处理*/
 		$this->PDOStatement = $this->linkID->prepare($sql);
+		/*绑定参数*/
+		$this->bindValue($bind);
+
+
+
+		/*执行*/
+		
 
 
 		/*处理返回结果*/
