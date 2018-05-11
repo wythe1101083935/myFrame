@@ -1,48 +1,28 @@
 <?php
+
 namespace wythe\data;
-
-
-/*
- 
-*/
-
 class Db{
-	private static $instance = [];
 
-	public static $queryTimes = 0 ;
+    /*数据库连接句柄*/
+    private static $instance = [];
 
-	public static $executeTimes = 0;
+    /*连接数据库*/
+    public static function connect($config = []){
+        $name = md5(serialize($config));
+        /*需要重新连接*/
+        if(!isset(self::$instance[$name])){
+            /*1.根据数据库类型选择驱动*/
+            $class = __NAMESPACE__.'\\db\\'.ucwords($config['type']);
+            /*2.验证驱动是否存在*/
 
-
-	public static function connect($config=[],$name= false){
-		if(false === $name){
-			$name = md5(serialize($config));
-		}
-
-        if (true === $name || !isset(self::$instance[$name])) {
-            // 解析连接参数 支持数组和字符串
-            $options = self::parseConfig($config);
-
-            if (empty($options['type'])) {
-                throw new \InvalidArgumentException('Undefined db type');
-            }
-
-            $class = false !== strpos($options['type'], '\\') ?
-            $options['type'] :
-            '\\think\\db\\connector\\' . ucwords($options['type']);
-
-            // 记录初始化信息
-            if (App::$debug) {
-                Log::record('[ DB ] INIT ' . $options['type'], 'info');
-            }
-
-            if (true === $name) {
-                $name = md5(serialize($config));
-            }
-
-            self::$instance[$name] = new $class($options);
+            /*3.生成连接实例*/
+            self::$instance[$name] = new $class($config);           
         }
 
         return self::$instance[$name];
-	}
+    }
+
+    public static function __callStatic($method,$params){
+        return call_user_func_array([self::connect(),$method],$params);
+    }
 }
