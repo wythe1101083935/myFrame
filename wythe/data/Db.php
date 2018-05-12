@@ -21,8 +21,4 @@ class Db{
 
         return self::$instance[$name];
     }
-
-    public static function __callStatic($method,$params){
-        return call_user_func_array([self::connect(),$method],$params);
-    }
 }
