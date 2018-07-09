@@ -10,7 +10,7 @@ class Mysql{
         // 服务器地址
         'hostname'        => 'localhost',
         // 数据库名
-        'database'        => 'wf_ffl',
+        'database'        => 'knowlege',
         // 用户名
         'username'        => 'root',
         // 密码
@@ -26,7 +26,7 @@ class Mysql{
         // 数据库调试模式
         'debug'           => false,
         // 数据库部署方式:0 集中式(单一服务器),1 分布式(主从服务器)
-        'deploy'          => 0,
+        'deploy'          => false,
         // 数据库读写是否分离 主从式有效
         'rw_separate'     => false,
         // 读写分离后 主服务器数量
@@ -49,8 +49,11 @@ class Mysql{
         'break_reconnect' => false,
 	];
 
-	/*数据库连接实例*/
-	protected $links = [];
+	/*数据库连接实例-读*/
+	protected $readLink;
+
+	/*数据库连接实例-写*/
+	protected $writeLink;
 
 	/*当前sql*/
 	protected $queryStr = '';
@@ -78,59 +81,44 @@ class Mysql{
 		$this->config = $config + $this->config;
 	}
 
-	/*拼接DSN*/
-	protected function parseDsn(){
-		$config = $this->config;
-		if(!empty($config['socket'])){
-			$dsn = 'mysql:unix_soket=' . $config['socket'];
-		}elseif(!empty($config['hostport'])){
-			$dsn = 'mysql:host=' . $config['hostname'] . ';port=' . $config['hostport'];
-		}
-		$dsn .= ';dbname=' . $config['database'];
-
-		if(!empty($config['charset'])){
-			$dsn .= ';charset=' . $config['charset'];
-		}
-		return $dsn;
-	}
 	/*数据库连接*/
-	protected function connect($linkNum){
+	protected function connect(){
 		$config = $this->config;
-		if(!isset($this->links[$linkNum])){
+		/*设置写服务器*/
+		if(is_null($this->writeLink)){
 			/*获得DSN*/
-			$dsn = $this->parseDsn();
-
-			/*连接开始时间*/
-			if($config['debug']){
-				$startTime = microtime(true);
+			$dsn = 'mysql:host=' . $config['hostname'] . ';port=' . $config['hostport'] . ';dbname=' . $config['database'];
+			if(!empty($config['charset'])){
+				$dsn .= ';charset=' . $config['charset'];
 			}
-
-			/*数据库连接*/
-			$this->links[$linkNum] = new \PDO($dsn,$config['username'],$config['password'],$config['params']);
-
-			/*连接结束时间*/
-			if($config['debug']){
-				echo 'contact time :' . number_format(microtime(true)-$startTime,6);
-			}
-
+			/*数据库连接*/	
+			$this->writeLink = new \PDO($dsn,$config['username'],$config['password']);
 		}
-		return $this->links[$linkNum];
+		/*设置读服务器*/
+		if(is_null($this->readLink)){	
+			if($config['rw_separate']){
+
+			}else{
+				$this->readLink = $this->writeLink;
+			}
+		}
+
 	}	
 
 	/*执行查询函数*/
-	public function query($sql,$bind=[],$master=false){
+	public function query($sql,$bind=[]){
 		/*记录sql语句*/
 		$this->queryStr = $sql;
 		/*数据库连接*/
 		$this->connect();
 		/*预处理*/
-		$this->PDOStatement = $this->linkID->prepare($sql);
+		$this->PDOStatement = $this->readLink->prepare($sql);
 		/*绑定参数*/
 		$this->bindValue($bind);
 		/*执行*/
 		$this->PDOStatement->execute();
 		/*处理返回结果*/
-		return  $this->PDOStatement->fetchAll($this->$config['result_type']);;
+		return  $this->PDOStatement->fetchAll($this->config['result_type']);
 	}
 
 	/*参数绑定*/

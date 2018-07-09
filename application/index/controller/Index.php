@@ -3,16 +3,32 @@ namespace application\index\controller;
 use wythe\data\Db;
 class Index
 {
-    public function index()
+
+    public function index(){
+        //echo 123;
+       $db = new Db();
+       $where = [
+        ['b.cid','in','sd,3d,23,23','OR'],
+        [
+          ['a.cid','>',10,'OR'],
+          ['d.id','<',20]
+        ],
+        ['c.uid',15]
+       ];
+       $db->table('awb as a,awbno as b')->field('a.sd,b.ds,a.ds')->where('a','<',12)->where('d','>',12)->where($where)->join('awb as a','a.id=b.id')->select();
+       //$db->where('a','>',12)->where('b','<',13)->where('c',15)->testWhere();
+    }
+
+    public function index1()
     {
     	header("Content-Type:text/html;Charset=utf-8");
-    	$db = Db::connect([
+    	$mysql = Db::connect([
         // 数据库类型
         'type'            => 'mysql',
         // 服务器地址
         'hostname'        => 'localhost',
         // 数据库名
-        'database'        => 'wf_ffl',
+        'database'        => 'knowlege',
         // 用户名
         'username'        => 'root',
         // 密码
@@ -48,7 +64,12 @@ class Index
         // 是否需要断线重连
         'break_reconnect' => false,
     	]);
-    	$db->test();
+
+        $sql = 'select * from wythe_kl';
+
+       $res =  $mysql->query($sql);
+       var_dump($res);
+
     }
 
     public function hello(){

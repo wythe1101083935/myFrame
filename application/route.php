@@ -28,7 +28,7 @@ return array(
         ) ,
         'hello1' => array(
             'rule'=>'hello1/:id',
-            'route' => 'index/index',
+            'route' => 'index/Index/index',
             'var' => array(
                 'id' => true,
             ) ,
