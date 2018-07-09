@@ -73,48 +73,50 @@ class App{
 
 	/*应用入口*/
 	public static function run(){
-		/*只有Loader需要手动加载*/
-		require SYSTEM_PATH . 'Loader.php';
-		/*注册自动加载，并注册框架根命名空间*/
-		Loader::register([
-			'is_win'=>IS_WIN,
-		    'depr'=>DS,
-		    'ext'=>EXT,
-		]);
-		Loader::addNamespace('wythe',WYTHE_PATH);
-		/*执行应用*/
-		/*1.加载应用配置文件*/
-		self::$configPath = APP_PATH . 'config'. EXT;
-		self::$config = (include self::$configPath) + self::$config;
-		Loader::addNamespace(self::$config['root_namespace']);
-		Loader::addNamespace(self::$config['app_namespace'],APP_PATH);
+		/*1.手动加载Loader*/
+			require SYSTEM_PATH . 'Loader.php';
 
-		/*2系统参数设置*/
-		date_default_timezone_set(self::$config['default_timezone']);//设置系统时区	
-		//Lang::range($config['default_lang']);//默认语言	 	
-		//$config['lang_switch_on'] && Lang::detect();//是否开启语言自动检测
+		/*2.注册自动加载，并注册框架根命名空间*/
+			Loader::register([
+				'is_win'=>IS_WIN,
+			    'depr'=>DS,
+			    'ext'=>EXT,
+			]);
+			Loader::addNamespace('wythe',WYTHE_PATH);
 
-		/*3.获取请求信息*/
-		self::$request = Request::instance();
+		/*3.加载应用配置文件并设置系统参数*/
+			//1)获取配置文件路径
+			self::$configPath = APP_PATH . 'config'. EXT; 
+			//2)加载应用配置文件
+			self::$config = (include self::$configPath) + self::$config;
+			//3)注册应用根命名空间
+			Loader::addNamespace(self::$config['app_namespace'],APP_PATH);
+			//4)注册额外根命名空间
+			Loader::addNamespace(self::$config['root_namespace']);
+			//5)设置系统时区
+			date_default_timezone_set(self::$config['default_timezone']);
+			//6)设置系统语言
+			//Lang::range($config['default_lang']);//默认语言	 	
+			//$config['lang_switch_on'] && Lang::detect();//是否开启语言自动检测
 
-		/*4.获取路由*/
-		self::$dispatch = Route::routeStart(self::$config['route'],self::$request->pathInfo,self::$request->domain);
+		/*4.获取请求信息*/
+			self::$request = Request::instance();
 
-		/*5.根命名空间加载*/
+		/*5.获取路由*/
+			self::$dispatch = Route::routeStart(self::$config['route'],self::$request->pathInfo,self::$request->domain);
 
+		/*6.执行应用*/
+			$data = self::exec();	
 
-
-		/*6.执行*/
-		$data = self::exec();	
-		/*写入日志*/
-		//\tools\Log::write();	
+		/*7.写入日志*/
+			//\tools\Log::write();	
 	}
 	
-	/*执行核心*/
+	/*执行应用*/
 	public static function exec(){
         switch (self::$dispatch['type']) {
         	case 'pathInfo':
-            case 'module': //调用模块控制器方法 
+            case 'module': 
             	list($module,$controller,$action)= explode('/',self::$dispatch['route']);
                 $data = self::module(strtolower($module),ucfirst($controller),$action);
                 break;
@@ -152,7 +154,7 @@ class App{
         }
 
         /*6.执行操作*/   
-        return $controller->$action();;
+        return $controller->$action();
     }
 }
 
