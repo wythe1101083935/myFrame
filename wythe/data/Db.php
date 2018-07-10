@@ -41,27 +41,23 @@ class Db{
     /*sql选项*/
     protected $options = [];
 
+    /*bind数据*/
+    protected $bind = [];
+
     /*数据库配置*/
     protected $config = [];
 
     /*当前执行使用的数据库配置*/
     protected $currDatabase = 0;
 
+    /*初始化*/
     protected function __construct($config){
        /*初始化initOptions*/
        $this->initOptions(); 
        $this->$config[0] = $config; //设置默认数据库配置
     }
 
-    /*
-     +----------------------------------------------------------
-     * 单例获取
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*本例单例*/
     public static function getDb($config){
         if(is_null(self::$dbInstance)){
             self::$dbInstance = new self($config);
@@ -69,43 +65,25 @@ class Db{
         return self::$dbInstance;
     }
 
-    /*
-     +----------------------------------------------------------
-     * 增加数据库设置
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置数据库*/
     public function setConfig($config,$configSign = 1){
         $this->$config[$configSign] = $config;
         return $this;
     }
 
-    /*
-     +----------------------------------------------------------
-     * 选择执行时的数据库配置
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*单独设置此次表前缀*/
+    public function pre($pre){
+        $this->options['prefix'] = $pre;
+    }
+    
+    /*选择执行时的数据库设置*/
     public function database($sign=0){
         $this->currDatabase = $sign;
         return $this;
     }
 
-    /*
-     +----------------------------------------------------------
-     * 初始化$options
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*初始化创建sql的$options*/
+
     protected function initOptions(){
         $this->options = array(
             'distinct'=>null,
@@ -125,16 +103,8 @@ class Db{
         );
     }
 
-    /*
-     +----------------------------------------------------------
-     * 控制连接数量，连接数据库
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
-    public function connect($config = []){
+    /*返回数据库连接句柄*/
+    protected function connect($config = []){
         $name = md5(serialize($config));
         /*需要重新连接*/
         if(!isset(self::$instance[$name])){
@@ -143,18 +113,20 @@ class Db{
             /*2.验证驱动是否存在*/
 
             /*3.生成连接实例*/
-            self::$instance[$name] = new $class($config);           
+            self::$instance[$name] = new $class($config);     
         }
         return self::$instance[$name];
     }
 
     /*创建SQL语句*/
-    public function buildSql($type,$pre=''){
+    public function buildSql($type){
         /*判断生成sql语句类型*/
         $sql = self::$SQL[$type];
 
         /*设置表前缀*/
-        $this->options['prefix'] = $pre;
+        if(is_null($this->options['prefix'])){
+            $this->options['prefix'] = $this->config[$this->currDatabase]['prefix'];
+        }
 
         /*获取每个部分的sql string*/
         foreach ($sql[0] as $val) {
@@ -167,18 +139,10 @@ class Db{
 
         /*清空options为下次创建作准备*/
         $this->initOptions();
-        return $sql;
+        return '('.$sql.')';
     } 
 
-    /*
-     +----------------------------------------------------------
-     * 设置where
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return $this
-     +----------------------------------------------------------
-    */
+    /*设置where*/
     public function where($field,$op = null,$condition = null,$next='AND'){
         /*数组格式批量设置*/
         if(is_array($field)){
@@ -244,35 +208,34 @@ class Db{
             }
         } else {
             /*1.处理字段*/
-            $fieldStr = $this->parseFieldCore($where[0]);
+            $fieldStr = $this->parseFieldCore($where[0]);    
+
             /*2.处理逻辑符号与条件*/
             switch ($where[1]) {
                 case 'in':     
                 case 'IN':     
                 case 'not in':     
                 case 'NOT IN':
-                    $str = $where[2];
-
-                    $whereStr = $fieldStr . ' ' . $where[1] . ' ' . '('.$where[2].')';
+                    $whereStr = $fieldStr . ' ' . $where[1] . ' ' .'('.$this->bind($where[2]).')';
                     break;
                 default:
-                    $whereStr = $fieldStr . ' ' . $where[1] . ' ' . $where[2];
+                    $whereStr = $fieldStr . ' ' . $where[1] . ' ' . $this->bind($where[2]);
                     break;
             }
+             ;
             
         }
         return $whereStr;
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置distinct
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return $this
-     +----------------------------------------------------------
-    */
+    /*处理参数绑定*/
+    protected function bind($value){
+        $count = count($this->options['bind']);
+        $this->bind[':wythe'.($count+1)] = $value;
+        return ':wythe'.($count+1);
+    }
+
+    /*设置distinct*/
     public function distinct($distinct){
         if($distinct){
             $this->options['distinct'] = 'DISTINCT';
@@ -291,37 +254,27 @@ class Db{
         }
     }
     
-    /*
-     +----------------------------------------------------------
-     * 设置table
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return $this
-     +----------------------------------------------------------
-    */
+    /*设置table*/
     public function table($table){
         $this->options['table'] = $table;
         return $this;
     }
+
     /*parseTable*/
     protected function parseTable(){
-       return $this->parseMultiField($this->options['table'],$this->options['prefix']); //表名加前缀
+       if(strpos('(',$this->options['table']) !== false){
+        return $this->options['table'];
+       }else{
+        return $this->parseMultiField($this->options['table'],$this->options['prefix']); //表名加前缀
+       }
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置字段
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return $this
-     +----------------------------------------------------------
-    */
+    /*设置字段*/
     public function field($field){
         $this->options['field'] = $field;
         return $this;
     }
+
     /*parseField*/
     protected function parseField(){
         if(is_null($this->options['field'])){
@@ -331,15 +284,7 @@ class Db{
         }
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置force
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置force*/
     public function force($force){
         $this->options['force'] = $force;
         return $this;
@@ -353,15 +298,7 @@ class Db{
         }
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置join
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置join*/
     public function join($table,$condition = null,$type = 'INNER'){
         if(is_array($table)){
            $this->options['join']= array_merge($this->options['join'],$table);
@@ -389,15 +326,7 @@ class Db{
         return rtrim($joinStr,',');
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置order
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置order*/
     public function order($order){
         $this->options['order'] = $order;
         return $this;
@@ -410,15 +339,7 @@ class Db{
         }
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置group
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置group*/
     public function group($group){
         $this->options['group'] = $group;
         return $this;
@@ -431,15 +352,7 @@ class Db{
         }
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置having
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置having*/
     public function having($field,$op = null,$condition = null,$next='AND'){
         /*数组格式批量设置*/
         if(is_array($field)){
@@ -460,15 +373,7 @@ class Db{
         }
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置limit
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置limit*/
     public function limit($limit){
         $this->options['limit'] = $limit;
     }
@@ -480,15 +385,8 @@ class Db{
             return ' LIMIT ' . $limit . ' ';
         }
     }
-    /*
-     +----------------------------------------------------------
-     * 设置注释
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+
+    /*设置注释*/
     public function comment($comment){
         $this->options['comment'] = $comment;
         return $this;
@@ -497,15 +395,7 @@ class Db{
         return is_null($this->options['comment']) ? '' : '/*'.$this->options['comment'] . '*/';
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置lock，锁机制
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置lock，锁机制*/
     public function lock($lock){
         $this->options['lock'] = $lock;
     }
@@ -520,15 +410,7 @@ class Db{
         }
     }
 
-    /*
-     +----------------------------------------------------------
-     * 设置union
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*设置union*/
     public function union($union){
         $this->options['union'] = $union;
         return $this;
@@ -536,15 +418,9 @@ class Db{
     protected function parseUnion(){
         return '';
     }
-    /*
-     +----------------------------------------------------------
-     * 处理字段核心字符处理函数 // tablename as alias,tablename.ab alias
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+
+
+    /*处理字段核心字符处理函数 tablename as alias,tablename.ab alias*/
     private function parseFieldCore($fieldStr=null,$pre=''){
         if(is_null($fieldStr)){
             return '';
@@ -585,15 +461,7 @@ class Db{
         return $str;
     }
 
-    /*
-     +----------------------------------------------------------
-     * 处理多个字段
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+    /*处理多个字段*/
     private function parseMultiField($field,$pre=''){ 
         $field = explode(',',$field);
         $fieldStr = '';
@@ -602,33 +470,28 @@ class Db{
         }
         return rtrim($fieldStr,',');
     }
-    /*
-     +----------------------------------------------------------
-     * 测试用
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
+
+    /*select*/
     public function select(){
-        $sql = $this->buildSql('select',$this->config[$this->currDatabase]['prefix']);
-        $return = $this->query($sql,'select');
-        $connect = $this->connect($this->config[$this->currDatabase]);
-        dump($sql);
+        $sql = $this->buildSql('select');
+        return $this->query($sql);
     }
 
-    /*
-     +----------------------------------------------------------
-     * 执行sql
-     +----------------------------------------------------------
-     * @param  ;
-     +----------------------------------------------------------
-     * @return json{status:bool,msg:string,data:mix,code:int}
-     +----------------------------------------------------------
-    */
-    protected function query($sql,$type){
+    /*执行sql*/
+    public function query($sql){
+        return $this->dbExecute($sql,'query');
+    }
+
+    /*执行sql*/
+    public function execute($sql){
+        return $this->dbExecute($sql,'execute');
+    }
+
+    /*真正执行*/
+    protected function dbExecute($sql,$type){
         $connect = $this->connect($this->config[$this->currDatabase]);
-        return $connect->query($sql,$type);
+        $result = $connect->query($sql,$this->bind,$type);
+        $this->bind = [];//重置bind
+        return $result;        
     }
 }

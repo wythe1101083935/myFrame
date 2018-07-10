@@ -124,18 +124,19 @@ class Mysql{
 	/*参数绑定*/
 	protected function bindValue(array $bind = []){
 		foreach ($bind as $key => $val) {
-			$param = is_numeric($key) ? $key + 1 : ':' . $key;
-			if(is_array($val)){
-				if(PDO::PARAM_INT == $val[1] && '' == $val[0]){
-					$val[0] = 0;
-				}
-				$result = $this->PDOStatement->bindValue($param,$val[0],$val[1]);
-			}else{
-				$result = $this->PDOStatement->bindValue($param,$val);
-			}
+			$param = $key;
+			$result = $this->PDOStatement->bindValue($param,$val,$this->bindType($val));
 			if(!$result){
 				echo 'error';
 			}
 		}
+	}
+
+	/*设置绑定类型*/
+	protected function bindType($val){
+		if(is_bool($val)) return PDO::PARAM_BOOL;
+		if(is_int($val)) return PDO::PARAM_INT;
+		if(is_string($val)) return PDO::PARAM_STR;
+		return PDO::PARAM_STR;
 	}
 }
