@@ -127,7 +127,6 @@ class Mysql{
 		/*数据库连接*/
 		dump($sql);
 		$this->connect();
-
 		/*预处理*/
 		$this->PDOStatement = $this->readLink->prepare($sql);
 		/*绑定参数*/

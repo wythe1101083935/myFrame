@@ -15,7 +15,7 @@ class Db{
     /*db单例*/
     private static $dbInstance = null;
 
-    /*数据库连接句柄*/
+    /*数据库实例*/
     private static $instance = [];
 
     /*SQL*/
