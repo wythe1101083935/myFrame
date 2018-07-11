@@ -54,7 +54,7 @@ class Db{
     protected function __construct($config){
        /*初始化initOptions*/
        $this->initOptions(); 
-       $this->$config[0] = $config; //设置默认数据库配置
+       $this->config[0] = $config; //设置默认数据库配置
     }
 
     /*本例单例*/
@@ -67,7 +67,7 @@ class Db{
 
     /*设置数据库*/
     public function setConfig($config,$configSign = 1){
-        $this->$config[$configSign] = $config;
+        $this->config[$configSign] = $config;
         return $this;
     }
 
@@ -99,7 +99,7 @@ class Db{
             'limit'=>null,
             'lock'=>null,
             'comment'=>null,
-            'prefix'=>'',
+            'prefix'=>null,
         );
     }
 
@@ -230,7 +230,7 @@ class Db{
 
     /*处理参数绑定*/
     protected function bind($value){
-        $count = count($this->options['bind']);
+        $count = count($this->bind);
         $this->bind[':wythe'.($count+1)] = $value;
         return ':wythe'.($count+1);
     }
@@ -278,7 +278,7 @@ class Db{
     /*parseField*/
     protected function parseField(){
         if(is_null($this->options['field'])){
-            return '';
+            return '*';
         }else{
             return $this->parseMultiField($this->options['field']);
         }
@@ -316,9 +316,9 @@ class Db{
         }else{
             $joinStr = '';
             foreach ($join as $key => $val) {
-               $table = $this->parseFieldCore(trim($val[0]),$this->options['pre']);//表名加前缀
+               $table = $this->parseFieldCore(trim($val[0]),$this->options['prefix']);//表名加前缀
                $arr = explode('=',$val[1]);
-               $condition = $this->parseFieldCore(array_shift($arr)) . ' = ' . $this->parseFieldCore(array_pop($arr));
+               $condition = $this->parseFieldCore(trim(array_shift($arr))) . ' = ' . $this->parseFieldCore(trim(array_pop($arr)));
                $type = $val[2];
                $joinStr .=  ' '.$type . ' JOIN '. $table . ' ON '. $condition . ',';
             }            
@@ -442,14 +442,18 @@ class Db{
             $field = '';
             foreach ($fieldArr as $key=>$val) {
                 if($key == 0){
-                    $field .= '`'.$pre.$val.'`'.'.';//第一个可能是表名，加上前缀
+                    $field .= '`'.$pre.$val.'`'.'.';//第一个是表名，加上前缀
+                }elseif($val == '*'){
+                    $field .= $val . '.';
                 }else{
                     $field .= '`'.$val.'`'.'.';
                 }
             }
             $field = rtrim($field,'.');
         }else{
-            $field = '`'.$pre.$field.'`';
+            if($field != '*'){
+               $field = '`'.$pre.$field.'`'; 
+            }    
         }
         /*别名加上反引号,返回处理后的字符串*/
         if($alias != ''){

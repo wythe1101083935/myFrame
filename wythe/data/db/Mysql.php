@@ -50,10 +50,10 @@ class Mysql{
 	];
 
 	/*数据库连接实例-读*/
-	protected $readLink;
+	protected $readLink=null;
 
 	/*数据库连接实例-写*/
-	protected $writeLink;
+	protected $writeLink=null;
 
 	/*当前sql*/
 	protected $queryStr = '';
@@ -106,11 +106,13 @@ class Mysql{
 	}	
 
 	/*执行查询函数*/
-	public function query($sql,$bind=[]){
+	public function query($sql,$bind=[],$type="query"){
 		/*记录sql语句*/
 		$this->queryStr = $sql;
 		/*数据库连接*/
+		dump($sql);
 		$this->connect();
+
 		/*预处理*/
 		$this->PDOStatement = $this->readLink->prepare($sql);
 		/*绑定参数*/
@@ -125,7 +127,7 @@ class Mysql{
 	protected function bindValue(array $bind = []){
 		foreach ($bind as $key => $val) {
 			$param = $key;
-			$result = $this->PDOStatement->bindValue($param,$val,$this->bindType($val));
+			$result = $this->PDOStatement->bindValue($param,$val); //$this->bindType($val)
 			if(!$result){
 				echo 'error';
 			}
