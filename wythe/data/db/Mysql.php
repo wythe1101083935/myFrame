@@ -84,12 +84,15 @@ class Mysql{
 		$this->config = $config + $this->config;
 	}
 
-	/*数据库连接*/
-	protected function connect(){
-		/*设置写服务器*/
-		if(is_null($this->writeLink)){//写服务器只有这一台
+	/*连接master*/
+	protected function connectExecute(){
+		if(is_null($this->writeLink)){
 			$this->writeLink = $this->createPDO($this->config);	
+			return $this->writeLink;			
 		}
+	}	
+	/*连接slave*/
+	protected function conectQuery(){
 		if(is_null($this->readLink)){
 			if($this->config['rw_separate']){/*如果是读写分离*/
 				$total = 0;
@@ -109,7 +112,7 @@ class Mysql{
 				$this->readLink = $this->writeLink;
 			}
 		}
-	}	
+	}
 
 	/*pdo连接数据库*/
 	protected function createPDO($conf){
@@ -125,16 +128,20 @@ class Mysql{
 		/*记录sql语句*/
 		$this->queryStr = $sql;
 		/*数据库连接*/
-		dump($sql);
-		$this->connect();
+		$connect = 'connect'.ucfirst($type);
+		$link = $this->$connect($type);
 		/*预处理*/
-		$this->PDOStatement = $this->readLink->prepare($sql);
+		$this->PDOStatement =$link->prepare($sql);
 		/*绑定参数*/
 		$this->bindValue($bind);
 		/*执行*/
 		$this->PDOStatement->execute();
 		/*处理返回结果*/
-		return  $this->PDOStatement->fetchAll($this->config['result_type']);
+		if($type == 'query'){
+			return  $this->PDOStatement->fetchAll($this->config['result_type']);
+		}else{
+			return $this->PDOStatement->rowCount();
+		}
 	}
 
 	/*参数绑定*/

@@ -26,16 +26,16 @@ class Db{
         ],
         'insert'=>[
             ['%INSERT%','%TABLE%','%FIELD%','%DATA%','%COMMENT%'],
-            '%INSERT% INTO %TABLE% (%FIELD%) VALUES (%DATA%) %COMMENT%'
-        ],
-        'insertAll'=>[
-            ['%INSERT%','%TABLE%','%FIELD%','%DATA%','%COMMENT%'],
-            '%INSERT% INTO %TABLE% (%FIELD%) %DATA% %COMMENT%'
+            '%INSERT% INTO %TABLE% (%FIELD%) VALUES %DATA% %COMMENT%'
         ],
         'update'=>[
             ['%TABLE%','%SET%','%JOIN%','%WHERE%','%ORDER%','%LIMIT%','%LOCK%','%COMMENT%'],
             'UPDATE %TABLE% SET %SET% %JOIN% %WHERE% %ORDER%%LIMIT% %LOCK%%COMMENT%'
-        ]
+        ],
+        'delete'=>[
+            ['%TABLE%','%USING%','%JOIN%','%WHERE%','%ORDER%','%LIMIT%','%LOCK%','%COMMENT%'],
+            'DELETE FROM %TABLE% %USING% %JOIN% %WHERE% %ORDER%%LIMIT% %LOCK%%COMMENT%'
+        ],
     ];
 
     /*sql选项*/
@@ -100,6 +100,9 @@ class Db{
             'lock'=>null,
             'comment'=>null,
             'prefix'=>null,
+            'insert'=>null,
+            'data'=>[],
+            'using'=>null
         );
     }
 
@@ -139,7 +142,12 @@ class Db{
 
         /*清空options为下次创建作准备*/
         $this->initOptions();
-        return '('.$sql.')';
+
+        /*可能创建子查询*/
+        if($type == 'select'){
+            $sql = '(' . $sql . ')';
+        }
+        return $sql;
     } 
 
     /*设置where*/
@@ -369,7 +377,7 @@ class Db{
         if(empty($having)){
             return '';
         }else{
-            return $this->parseWhereCore($having);
+            return ' HAVING '.$this->parseWhereCore($having);
         }
     }
 
@@ -419,6 +427,68 @@ class Db{
         return '';
     }
 
+    /*设置data*/
+    public function data(array $data=[]){
+        $this->options['data'] = $data;
+        /*设置字段*/
+        $this->options['field'] = implode(',',array_keys(is_array(current($data)) ? $data[0] : $data));
+        return $this;
+    }
+    protected function parseData(){
+        $data = $this->options['data'];
+        $dataStr = '';
+        /*插入多行*/
+        if(is_array(current($data))){       
+            foreach ($data as $key => $val) {
+                $str = '';
+                foreach ($val as $k => $v) {
+                    $str .= $this->bind($v) . ',';
+                }
+                $dataStr .= '(' . rtrim($str,',') . ')' . ',';
+            }
+            $dataStr = rtrim($dataStr,',');
+        /*插入单行*/
+        }else{
+            $str = '';
+            foreach ($data as $key => $val) {
+               $str .= $this->bind($val) . ',';
+            }
+            $dataStr = '(' . rtrim($str,',') . ')';
+        }
+        return $dataStr; 
+    }
+
+    /*设置set*/
+    protected function parseSet(){
+        $data = $this->options['data'];
+        $setStr = '';
+        foreach ($data as $key => $val) {
+            $setStr .= $key . '=' . $this->bind($val) . ',';
+        }
+        return rtrim($setStr,',');
+    }
+
+    /*设置using*/
+    public function using($using){
+        $this->options['using'] = $using;
+        return $this;
+    }
+    protected function parseUsing(){
+        if(is_null($this->options['using'])){
+            return '';
+        }else{
+            return ' USING ' . $this->parseMultiField($this->options['using']);
+        }
+    }
+
+    /*insert*/
+    protected function parseInsert(){
+        if(is_null($this->options['insert'])){
+            return 'INSERT';
+        }else{
+            return 'REPLACE';
+        }
+    }
 
     /*处理字段核心字符处理函数 tablename as alias,tablename.ab alias*/
     private function parseFieldCore($fieldStr=null,$pre=''){
@@ -477,8 +547,32 @@ class Db{
 
     /*select*/
     public function select(){
-        $sql = $this->buildSql('select');
-        return $this->query($sql);
+        return $this->query($this->buildSql('select'));
+    }
+
+    /*delete*/
+    public function delete(){
+        return $this->execute($this->buildSql('delete'));
+    }
+    /*insert*/
+    public function insert($data=null,$insert=null){
+       if(!is_null($data)){
+        $this->data($data);
+       }
+       $this->options['insert'] = $insert;
+       return $this->execute($this->buildSql('insert'));
+    }
+    /*update*/
+    public function update($data=null){
+        if(!is_null($data)){
+            $this->data($data);
+        }
+        return $this->execute($this->buildSql('update'));
+    }
+
+    /*setField*/
+    public function setField($field,$val){
+        return $this->update([$field=>$val]);
     }
 
     /*执行sql*/

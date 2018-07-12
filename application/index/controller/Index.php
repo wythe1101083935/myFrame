@@ -50,11 +50,23 @@ class Index
         $db = Db::getDb($config1);
        // $res1 = $db->table('kl')->where('kl_id','=',0)->select();
        // $res2 = $db->table('user')->select();
-        $res3 = $db->table('kl as k')->join('user as u','k.user_id = u.user_id')->select();
-       // dump($res1);
-       // dump($res2);
-        dump($res3);
-
+        //$res3 = $db->table('kl as k')->join('user as u','k.user_id = u.user_id')->select();
+        $data = [
+            'kl_name'=>1,
+            'kl_pid'=>1,
+            'kl_label'=>1,
+            'kl_content_file'=>1,
+            'kl_create_time'=>time(),
+            'kl_update_time'=>time(),
+            'user_id'=>1
+        ];
+        for ($i=0; $i < 1000; $i++) { 
+            $dataArr[$i] = $data;
+        }
+        //$res = $db->table('kl')->data($dataArr)->insert();
+        //$res = $db->table('kl')->where('kl_id','>',1500)->delete();
+        $res = $db->table('kl')->where('kl_id','<',5)->where('kl_id','>',3)->setField('kl_name','f');
+        dump($res);
     }
 
     public function index1()
