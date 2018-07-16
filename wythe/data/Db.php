@@ -107,7 +107,8 @@ class Db{
     }
 
     /*返回数据库连接句柄*/
-    protected function connect($config = []){
+    protected function connect(){
+        $config = $this->config[$this->currDatabase]
         $name = md5(serialize($config));
         /*需要重新连接*/
         if(!isset(self::$instance[$name])){
@@ -587,7 +588,7 @@ class Db{
 
     /*真正执行*/
     protected function dbExecute($sql,$type){
-        $connect = $this->connect($this->config[$this->currDatabase]);
+        $connect = $this->connect();
         $result = $connect->query($sql,$this->bind,$type);
         $this->bind = [];//重置bind
         return $result;        

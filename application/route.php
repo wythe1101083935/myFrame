@@ -27,7 +27,7 @@ return array(
             'pattern' => array() ,
         ) ,
         'hello1' => array(
-            'rule'=>'hello1/:id',
+            'rule'=>'',
             'route' => 'index/Index/index',
             'var' => array(
                 'id' => true,
@@ -38,7 +38,20 @@ return array(
             'pattern' => array(
                 'id' => '\d+',
             ) ,
-        ) ,
+        ),
+        'testCache'=>array(
+            'rule' => '',
+            'route'=>'index/Index/testCache',
+            'var' => array(
+                'id'=>true,
+            ),
+            'option'=>array(
+                'method'=>'get',
+            ),
+            'pattern'=>array(
+                'id' => '\d+'
+            )
+        ),
     ) ,
     'alias' => array(
         'user' => 'index/User',
