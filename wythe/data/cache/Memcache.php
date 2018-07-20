@@ -43,6 +43,7 @@ class Memcache{
 		}
 		ksort($this->position,SORT_REGULAR);;//虚拟节点盘成一圈，排序		
 	}
+
 	/*根据键查找应存(取)服务器*/
 	protected function lookup($key){
 		$point = $this->hash($key);
@@ -88,10 +89,10 @@ class Memcache{
 	}
 
 	/*删除缓存*/
-	public function delete($name){
+	public function delete($name,$time = 0){
 		$name = $this->getCachekey($name);
 		$this->connect($name);
-		$this->handler->delete($name);
+		$this->handler->delete($name,$time);
 	}
 
 	/*清空缓存*/
