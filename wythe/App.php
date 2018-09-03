@@ -11,6 +11,7 @@
  +----------------------------------------------------------
  */
 namespace wythe;
+use wythe\Container;
 use wythe\system\Loader;
 use wythe\system\Request;
 use wythe\system\Route;

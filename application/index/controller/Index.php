@@ -12,11 +12,11 @@ class Index
         // 服务器地址
         'hostname'        => '127.0.0.1',
         // 数据库名
-        'database'        => 'knowlege',
+        'database'        => 'test',
         // 用户名
         'username'        => 'root',
         // 密码
-        'password'        => '123456',
+        'password'        => 'root',
         // 端口
         'hostport'        => '3306',
         // 数据库连接参数
@@ -53,20 +53,14 @@ class Index
        // $res2 = $db->table('user')->select();
         //$res3 = $db->table('kl as k')->join('user as u','k.user_id = u.user_id')->select();
         $data = [
-            'kl_name'=>1,
-            'kl_pid'=>1,
-            'kl_label'=>1,
-            'kl_content_file'=>1,
-            'kl_create_time'=>time(),
-            'kl_update_time'=>time(),
-            'user_id'=>1
+            'name'=>'asd';
         ];
         for ($i=0; $i < 1000; $i++) { 
             $dataArr[$i] = $data;
         }
-        //$res = $db->table('kl')->data($dataArr)->insert();
+        $res = $db->table('kl')->data($dataArr)->insert();
         //$res = $db->table('kl')->where('kl_id','>',1500)->delete();
-        $res = $db->table('kl')->where('kl_id','<',5)->where('kl_id','>',3)->setField('kl_name','f');
+       // $res = $db->table('kl')->where('kl_id','<',5)->where('kl_id','>',3)->setField('kl_name','f');
         dump($res);
     }
 

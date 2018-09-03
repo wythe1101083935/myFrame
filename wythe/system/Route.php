@@ -68,13 +68,17 @@ class Route{
                     $ruleVar = $val['var'];
                     $options = $val['option']+$options;
                     $pattern = $val['pattern'] + $pattern;
-                    $return = self::match($ruleVar,$urlVar,$options,$pattern);
+                    $return = self::match($ruleVar,$urlVar,$options,$pattern);            
                     if($return) 
                         return array('route'=>$val['route'],'param'=>$urlVar,'type'=>'module');      
                 }
             /*单个路由*/
             }else{
                $ruleVar = $rules['var'];
+               dump($ruleVar);
+               dump($urlVar);
+               dump($options);
+               dump($pattern);
                $return = self::match($ruleVar,$urlVar,$options,$pattern);
                if($return) 
                  return array('route'=>$rules['route'],'param'=>$urlVar,'type'=>'module');
@@ -135,7 +139,7 @@ class Route{
 
             /*检查路由*/
             $return = self::check($pathInfo,$domain);
-            
+
             //不强制使用路由，混合验证
             if($return === false && !self::$config['route_must']){
                 return array('route'=>$pathInfo,'type'=>'pathInfo');
